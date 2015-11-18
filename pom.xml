@@ -6,7 +6,6 @@
     <packaging>war</packaging>
     <version>0.0.1-SNAPSHOT</version>
     <name>Order Store</name>
-    <url>http://maven.apache.org</url>
 
     <dependencies>
         <dependency>
@@ -32,7 +31,7 @@
             <version>1.3.1</version>
         </dependency>
     </dependencies>
-
+    
     <build>
         <finalName>order-store</finalName>
         <plugins>
@@ -51,8 +50,8 @@
                 <artifactId>tomcat7-maven-plugin</artifactId>
                 <version>2.2</version>
                 <configuration>
-                    <path>/${project.build.finalName}</path>
-                    <!--<url>http:// localhost:8080/manager/text</url>-->
+                    <!--<path>/${project.build.finalName}</path>-->
+                    <url>http://localhost:8080/manager/text</url>
                     <server>TomcatServer</server>
                 </configuration>
             </plugin>
