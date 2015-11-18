@@ -1,0 +1,96 @@
+/* Google Fonts */
+@import url(https://fonts.googleapis.com/css?family=Noto+Serif);
+
+body {
+    font-family: 'Noto Serif', 'sans-serif';
+    margin: auto;
+}
+
+p {
+    text-align: center;
+    padding-top: 20px;
+}
+
+table {
+    text-align: center;
+    padding: 3px;
+    font-size: 14px;
+    margin: auto;
+}
+
+.h4 {
+    text-align: center;
+    color: #2ba5ff;
+    font-size: 18px;
+    margin: auto;
+}
+
+.action-table {
+    width: 400px;
+    height: 75px;
+    border: 1px solid black;
+}
+
+.param-table {
+    width: 400px;
+    height: 150px;
+    border: 1px solid black;
+}
+
+.td-align-top {
+    vertical-align: top;
+    align-content: center;
+}
+
+.margin-top {
+    margin-top: 15px;
+}
+
+.submit {
+    margin-top: 3px;
+    height: 24px;
+}
+
+.lookup {
+    margin-left: 4px;
+}
+
+.init-table {
+    font-size: 18px;
+    color: darkgray;
+    text-align: center;
+}
+
+#page-wrapper {
+    width: 600px;
+    background: #FFF;
+    padding: 1em;
+    margin: 1em auto;
+    min-height: 300px;
+    border-top: 5px solid #69c773;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+}
+
+.indent {
+    margin-left: 7px;
+}
+
+.errors {
+    color: #df0e36;
+    font-weight: bold;
+}
+
+.messages {
+    font-size: 16px;
+}
+
+.radio {
+    text-align: left;
+    margin-left: 135px;
+}
+
+#lookupResult {
+    width: 30%;
+    margin: 0 auto;
+    align-self: center;
+}
