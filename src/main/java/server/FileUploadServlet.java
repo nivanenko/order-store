@@ -5,14 +5,19 @@ import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import server.object.Order;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.transform.stream.StreamSource;
 import java.io.*;
-import java.util.ArrayList;
 
 @MultipartConfig
 public class FileUploadServlet extends HttpServlet {
@@ -27,7 +32,7 @@ public class FileUploadServlet extends HttpServlet {
         if (isMultipart) {
             DiskFileItemFactory diskFileItemFactory = new DiskFileItemFactory();
             ServletFileUpload upload = new ServletFileUpload(diskFileItemFactory);
-            upload.setSizeMax(1048576); // 1 Megabyte
+            upload.setSizeMax(1048576 * 2); // 2 Megabyte
             InputStream inputStream;
 
             try {
@@ -44,29 +49,30 @@ public class FileUploadServlet extends HttpServlet {
                         while ((line = input.readLine()) != null) {
                             contentOfFile += line + "\n";
                         }
-//                        System.out.println(contentOfFile); // for test
 
-                        int dep_zip = Integer.parseInt(Parser.getAttrStr("from", "zip", inputStream));
-                        String dep_state = Parser.getAttrStr("from", "state", inputStream);
-                        String dep_city = Parser.getAttrStr("from", "city", inputStream);
-                        int des_zip = Integer.parseInt(Parser.getAttrStr("to", "zip", inputStream));
-                        String des_state = Parser.getAttrStr("to", "state", inputStream);
-                        String des_city = Parser.getAttrStr("to", "city", inputStream);
+                        JAXBContext jaxbContext = JAXBContext.newInstance(Order.class);
+                        Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+                        StreamSource source = new StreamSource(new StringReader(contentOfFile));
+                        JAXBElement<Order> je = unmarshaller.unmarshal(source, Order.class);
 
-                        ArrayList<Double> item_weight = Parser.getAttrItemDouble("weight", inputStream);
-                        ArrayList<Integer> item_vol = Parser.getAttrItemInt("volume", inputStream);
-                        ArrayList<Boolean> item_haz = Parser.getAttrItemBool("hazard", inputStream);
-                        ArrayList<String> item_prod = Parser.getAttrItemStr("product", inputStream);
+                        Order order = je.getValue();
 
-                        order_id = db.createOrder(dep_zip, dep_state, dep_city, des_zip, des_state, des_city, item_weight, item_vol, item_haz, item_prod);
+                        order_id = db.createOrder(
+                                order.getFrom().getZip(),
+                                order.getFrom().getState(),
+                                order.getFrom().getCity(),
+                                order.getTo().getZip(),
+                                order.getTo().getState(),
+                                order.getTo().getCity(),
+                                order.getLines().getLine());
 
                         String orderID = Integer.toString(order_id);
                         response.setContentType("text/html");
                         PrintWriter out = response.getWriter();
                         out.append(orderID);
                         out.close();
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                    } catch (JAXBException e) {
+                        System.err.println("JAXB error: " + e.getMessage());
                     }
                 }
             } catch (FileUploadException e) {

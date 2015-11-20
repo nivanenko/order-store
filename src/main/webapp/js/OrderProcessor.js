@@ -16,6 +16,7 @@ $(document).ready(function () {
   var lookupText = '#lookupText';
   var lookupResult = '#lookupResult';
   var lookupSubmit = 'label[for=\'lookupSubmit\']';
+  var lookupID = '#lookupID';
 
   var errorUploadMsg = '#errorUploadMsg';
   var errorLookupMsg = '#errorLookupMsg';
@@ -26,6 +27,7 @@ $(document).ready(function () {
 
     switch (value) {
       case "create":
+        $(lookupID).hide();
         $(lookupResult).hide();
         $(uploadResult).hide();
         $(errorUploadMsg).hide();
@@ -35,6 +37,7 @@ $(document).ready(function () {
         $(uploadParam).show();
         break;
       case "lookup":
+        $(lookupID).hide();
         $(lookupResult).hide();
         $(uploadResult).hide();
         $(errorUploadMsg).hide();
@@ -50,9 +53,16 @@ $(document).ready(function () {
   $('input[type="file"]').ajaxfileupload({
     'action': '/FileUploadServlet',
     'onComplete': function (response) {
-      $(uploadResult).append('' +
-        '<p>Order\'s been successfully saved. Order ID: <span style=\'color: green; font-weight: bold\'>' + response + "</span></p>").show();
-      $(fileInput).text('Choose the XML');
+      if (isNaN(response)) {
+        $(errorUploadMsg).append('<p>Error: ' + response + '</p>').show();
+        $(uploadResult).hide();
+        $(fileInput).text('Choose the XML');
+      } else {
+        $(errorUploadMsg).hide();
+        $(uploadResult).html('' +
+          '<p>Order\'s been successfully saved. Order ID: <span style=\'color: green; font-weight: bold\'>' + response + '</span></p>').show();
+        $(fileInput).text('Choose the XML');
+      }
     },
     'onStart': function () {
       $(fileInput).text('Processing the file...');
@@ -60,9 +70,9 @@ $(document).ready(function () {
       $(uploadResult).hide();
     },
     onCancel: function () {
+      $(uploadResult).hide();
       $(fileInput).text('Choose the XML');
       $(errorUploadMsg).show();
-      $(uploadResult).hide();
     }
   });
 
@@ -76,19 +86,25 @@ $(document).ready(function () {
       url: '/LookupServlet',
       data: {value: data},
       encode: true,
-        success: function (response) {
+      success: function (response) {
         if (response === 'error') {
-          $(errorLookupMsg).show();
+          $(lookupID).hide();
           $(lookupResult).hide();
+
+          $(errorLookupMsg).show();
           $(lookupSubmit).text('Lookup');
         } else {
+          $(errorLookupMsg).hide();
+
+          $(lookupID).html('<p>Order for ID: <span style=\'color: green; font-weight: bold\'>' + data
+            + '</span></p>').show();
           var json = JSON.stringify(response);
           $(lookupResult).JSONView(json).show();
-          $(errorLookupMsg).hide();
           $(lookupSubmit).text('Lookup');
         }
       },
       error: function () {
+        $(lookupID).hide();
         $(errorLookupMsg).show();
         $(lookupSubmit).text('Lookup');
       }

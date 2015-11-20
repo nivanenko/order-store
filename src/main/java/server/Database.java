@@ -2,6 +2,7 @@ package server;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import server.object.Line;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -26,28 +27,6 @@ public class Database {
         }
     }
 
-    public void test() {
-        System.err.println("************** BEGIN TESTING DATABASE ***************");
-        new Database();
-        ArrayList<Double> item_weight = new ArrayList<>();
-        ArrayList<Integer> item_vol = new ArrayList<>();
-        ArrayList<Boolean> item_haz = new ArrayList<>();
-        ArrayList<String> item_prod = new ArrayList<>();
-
-        item_weight.add(0, 232.2);
-        item_weight.add(1, 4567.1);
-        item_vol.add(0, 3);
-        item_vol.add(1, 75);
-        item_haz.add(0, false);
-        item_haz.add(1, true);
-        item_prod.add(0, "petrol");
-        item_prod.add(1, "ball");
-
-        System.out.println("JSON: " + createJSON(21));
-//        createOrder(9007, "NY", "New York", 30322, "DC", "Washington", item_weight, item_vol, item_haz, item_prod);
-        System.err.println("************** END TESTING DATABASE ***************");
-    }
-
     protected JSONObject createJSON(int order_id) {
         PreparedStatement preparedStatement;
         ResultSet resultSet;
@@ -57,14 +36,13 @@ public class Database {
         int dep_zip = 0, del_zip = 0;
         String dep_state = "", del_state = "", dep_city = "", del_city = "";
 
-        ArrayList<Integer> item_id = new ArrayList<>();
-        ArrayList<Double> item_weight = new ArrayList<>();
-        ArrayList<Integer> item_vol = new ArrayList<>();
-        ArrayList<Integer> item_haz = new ArrayList<>();
-        ArrayList<String> item_prod = new ArrayList<>();
+        List<Integer> item_id = new ArrayList<>();
+        List<Double> item_weight = new ArrayList<>();
+        List<Integer> item_vol = new ArrayList<>();
+        List<Integer> item_haz = new ArrayList<>();
+        List<String> item_prod = new ArrayList<>();
 
         try {
-            // Getting item_id
             preparedStatement = connection.prepareStatement
                     ("SELECT item_id FROM OrderItems WHERE order_id = ?");
             preparedStatement.setInt(1, order_id);
@@ -72,11 +50,10 @@ public class Database {
             if (!resultSet.next()) {
                 return null;
             }
-            while (resultSet.next()) {
+            do {
                 item_id.add(resultSet.getInt("item_id"));
-            }
+            } while (resultSet.next());
 
-            // Getting dep_id, del_id
             preparedStatement = connection.prepareStatement
                     ("SELECT dep_id, del_id FROM Orders WHERE order_id = ?");
             preparedStatement.setInt(1, order_id);
@@ -86,7 +63,6 @@ public class Database {
                 del_id = resultSet.getInt("del_id");
             }
 
-            // Getting departure data
             preparedStatement = connection.prepareStatement
                     ("SELECT dep_zip, dep_state, dep_city " +
                             "FROM Departure " +
@@ -99,7 +75,6 @@ public class Database {
                 dep_city = resultSet.getString("dep_city");
             }
 
-            // Getting delivery data
             preparedStatement = connection.prepareStatement
                     ("SELECT del_zip, del_state, del_city " +
                             "FROM Delivery " +
@@ -112,7 +87,6 @@ public class Database {
                 del_city = resultSet.getString("del_city");
             }
 
-            // Getting items data
             for (int i = 0; i < item_id.size(); i++) {
                 preparedStatement = connection.prepareStatement
                         ("SELECT item_weight, item_vol, item_haz, item_prod " +
@@ -137,7 +111,6 @@ public class Database {
             del_city = del_city.replaceAll("\\s+$", "");
             del_state = del_state.replaceAll("\\s+$", "");
 
-            // Creating JSON
             JSONObject jo_dep = new JSONObject();
             jo_dep.put("zip", dep_zip);
             jo_dep.put("state", dep_state);
@@ -149,14 +122,23 @@ public class Database {
             jo_del.put("city", del_city);
 
             JSONArray ja_lines = new JSONArray();
-            ArrayList<JSONObject> joList = new ArrayList<>();
+            List<JSONObject> joList = new ArrayList<>();
+
+            List<Boolean> item_hazBool = new ArrayList<>();
+            for (int i = 0; i < item_haz.size(); i++) {
+                if (item_haz.get(i) == 1) {
+                    item_hazBool.add(i, true);
+                } else {
+                    item_hazBool.add(i, false);
+                }
+            }
 
             for (int i = 0; i < item_id.size(); i++) {
                 joList.add(i, new JSONObject());
                 joList.get(i).put("weight", item_weight.get(i));
                 joList.get(i).put("volume", item_vol.get(i));
                 joList.get(i).put("product", item_prod.get(i));
-                joList.get(i).put("hazard", item_haz.get(i));
+                joList.get(i).put("hazard", item_hazBool.get(i));
                 ja_lines.put(joList.get(i));
             }
 
@@ -172,23 +154,33 @@ public class Database {
     }
 
     protected int createOrder(
-            int dep_zip, String dep_state, String dep_city,
-            int del_zip, String del_state, String del_city,
-            ArrayList<Double> item_weight,
-            ArrayList<Integer> item_vol,
-            ArrayList<Boolean> item_haz,
-            ArrayList<String> item_prod
+            String dep_zipStr, String dep_state, String dep_city,
+            String del_zipStr, String del_state, String del_city,
+            List<Line> lineList
     ) {
+        int dep_zip = Integer.parseInt(dep_zipStr);
+        int del_zip = Integer.parseInt(del_zipStr);
         int order_id = 0;
         int dep_id = 0;
         int del_id = 0;
+
         List<Integer> item_id = new ArrayList<>();
+        List<Double> item_weight = new ArrayList<>();
+        List<Double> item_vol = new ArrayList<>();
+        List<Boolean> item_haz = new ArrayList<>();
+        List<String> item_prod = new ArrayList<>();
+
+        for (Line aLineList : lineList) {
+            item_weight.add(aLineList.getWeight());
+            item_vol.add(aLineList.getVolume());
+            item_haz.add(aLineList.isHazard());
+            item_prod.add(aLineList.getProduct());
+        }
 
         PreparedStatement preparedStatement;
         ResultSet resultSet;
 
         try {
-            // Inserting into "Departure"
             preparedStatement = connection.prepareStatement(
                     "INSERT INTO Departure " +
                             "(dep_id, dep_zip, dep_state, dep_city) " +
@@ -198,7 +190,6 @@ public class Database {
             preparedStatement.setString(3, dep_city);
             preparedStatement.executeUpdate();
 
-            // Inserting into "Delivery"
             preparedStatement = connection.prepareStatement(
                     "INSERT INTO Delivery " +
                             "(del_id, del_zip, del_state, del_city) " +
@@ -218,19 +209,17 @@ public class Database {
                 }
             }
 
-            // Inserting into "Items"
             for (int i = 0; i < item_prod.size(); i++) {
                 preparedStatement = connection.prepareStatement(
                         "INSERT INTO Items " +
                                 "(item_id, item_weight, item_vol, item_prod, item_haz) " +
                                 "VALUES (item_seq.nextval, ?, ?, ?, ?)");
                 preparedStatement.setDouble(1, item_weight.get(i));
-                preparedStatement.setInt(2, item_vol.get(i));
+                preparedStatement.setDouble(2, item_vol.get(i));
                 preparedStatement.setString(3, item_prod.get(i));
                 preparedStatement.setInt(4, itemHazard.get(i));
                 preparedStatement.executeUpdate();
 
-                // Getting item_id
                 preparedStatement = connection.prepareStatement
                         ("SELECT item_seq.currval FROM dual");
                 resultSet = preparedStatement.executeQuery();
@@ -239,7 +228,6 @@ public class Database {
                 }
             }
 
-            // Getting dep_id, del_id
             preparedStatement = connection.prepareStatement
                     ("SELECT dep_seq.currval, del_seq.currval FROM dual");
             resultSet = preparedStatement.executeQuery();
@@ -248,7 +236,6 @@ public class Database {
                 del_id = resultSet.getInt(2);
             }
 
-            // Inserting data into table "Orders"
             preparedStatement = connection.prepareStatement(
                     "INSERT INTO Orders " +
                             "(order_id, dep_id, del_id) " +
@@ -257,7 +244,6 @@ public class Database {
             preparedStatement.setInt(2, del_id);
             preparedStatement.executeUpdate();
 
-            // Getting order_id
             preparedStatement = connection.prepareStatement
                     ("SELECT order_seq.currval FROM dual");
             resultSet = preparedStatement.executeQuery();
@@ -265,7 +251,6 @@ public class Database {
                 order_id = resultSet.getInt(1);
             }
 
-            // Inserting into "OrderItems"
             for (int i = 0; i < item_prod.size(); i++) {
                 preparedStatement = connection.prepareStatement(
                         "INSERT INTO OrderItems " +

@@ -1,7 +1,3 @@
-<!DOCTYPE web-app PUBLIC
-        "-//Sun Mycrosystems, Inc.// DTD Web Application 2.3/EN"
-"http://java.sun.com/dtd/web-app_2_3.dtd" >
-
 <web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee
@@ -20,7 +16,6 @@
         <servlet-name>FileUploadServlet</servlet-name>
         <url-pattern>/FileUploadServlet</url-pattern>
     </servlet-mapping>
-
     <servlet>
         <servlet-name>LookupServlet</servlet-name>
         <servlet-class>server.LookupServlet</servlet-class>
