@@ -53,10 +53,13 @@ $(document).ready(function () {
   $('input[type="file"]').ajaxfileupload({
     'action': '/FileUploadServlet',
     'onComplete': function (response) {
-      if (isNaN(response)) {
-        $(errorUploadMsg).append('<p>Error: ' + response + '</p>').show();
+      if (isNaN(response) || response === 0) {
         $(uploadResult).hide();
         $(fileInput).text('Choose the XML');
+        if (!(response === 0)) {
+          $(errorUploadMsg).append('<p>Error: ' + response + '</p>');
+        }
+        $(errorUploadMsg).show();
       } else {
         $(errorUploadMsg).hide();
         $(uploadResult).html('' +

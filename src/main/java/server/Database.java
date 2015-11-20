@@ -7,6 +7,7 @@ import server.object.Line;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
+import javax.xml.crypto.Data;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -15,21 +16,28 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Database {
-    private static Connection connection = null;
-
-    Database() {
+    private Connection openConnection(DataSource ds) {
         try {
             InitialContext initContext = new InitialContext();
-            DataSource ds = (DataSource) initContext.lookup("java:comp/env/jdbc/op");
-            connection = ds.getConnection();
+            ds = (DataSource) initContext.lookup("java:comp/env/jdbc/op");
+            return ds.getConnection();
         } catch (NamingException | SQLException e) {
             e.printStackTrace();
         }
+        return null;
+    }
+
+    private int booleanToInt(boolean value) {
+        // Convert true to 1 and false to 0
+        return value ? 1 : 0;
+    }
+
+    private boolean intToBoolean(int value) {
+        // Convert 1 to true and 0 to false
+        return value == 1;
     }
 
     protected JSONObject createJSON(int order_id) {
-        PreparedStatement preparedStatement;
-        ResultSet resultSet;
         JSONObject jo_main = new JSONObject();
 
         int dep_id = 0, del_id = 0;
@@ -43,62 +51,65 @@ public class Database {
         List<String> item_prod = new ArrayList<>();
 
         try {
-            preparedStatement = connection.prepareStatement
-                    ("SELECT item_id FROM OrderItems WHERE order_id = ?");
-            preparedStatement.setInt(1, order_id);
-            resultSet = preparedStatement.executeQuery();
-            if (!resultSet.next()) {
-                return null;
-            }
-            do {
-                item_id.add(resultSet.getInt("item_id"));
-            } while (resultSet.next());
-
-            preparedStatement = connection.prepareStatement
-                    ("SELECT dep_id, del_id FROM Orders WHERE order_id = ?");
-            preparedStatement.setInt(1, order_id);
-            resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()) {
-                dep_id = resultSet.getInt("dep_id");
-                del_id = resultSet.getInt("del_id");
+            try (PreparedStatement ps = connection.prepareStatement
+                    ("SELECT item_id FROM OrderItems WHERE order_id = ?")) {
+                ps.setInt(1, order_id);
+                ResultSet rs = ps.executeQuery();
+                if (!rs.next()) return null;
+                do {
+                    item_id.add(rs.getInt("item_id"));
+                } while (rs.next());
             }
 
-            preparedStatement = connection.prepareStatement
+            try (PreparedStatement ps = connection.prepareStatement
+                    ("SELECT dep_id, del_id FROM Orders WHERE order_id = ?")) {
+                ps.setInt(1, order_id);
+                ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    dep_id = rs.getInt("dep_id");
+                    del_id = rs.getInt("del_id");
+                }
+            }
+
+            try (PreparedStatement ps = connection.prepareStatement
                     ("SELECT dep_zip, dep_state, dep_city " +
                             "FROM Departure " +
-                            "WHERE dep_id = ?");
-            preparedStatement.setInt(1, dep_id);
-            resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()) {
-                dep_zip = resultSet.getInt("dep_zip");
-                dep_state = resultSet.getString("dep_state");
-                dep_city = resultSet.getString("dep_city");
+                            "WHERE dep_id = ?")) {
+                ps.setInt(1, dep_id);
+                ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    dep_zip = rs.getInt("dep_zip");
+                    dep_state = rs.getString("dep_state");
+                    dep_city = rs.getString("dep_city");
+                }
             }
 
-            preparedStatement = connection.prepareStatement
+            try (PreparedStatement ps = connection.prepareStatement
                     ("SELECT del_zip, del_state, del_city " +
                             "FROM Delivery " +
-                            "WHERE del_id = ?");
-            preparedStatement.setInt(1, del_id);
-            resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()) {
-                del_zip = resultSet.getInt("del_zip");
-                del_state = resultSet.getString("del_state");
-                del_city = resultSet.getString("del_city");
+                            "WHERE del_id = ?")) {
+                ps.setInt(1, del_id);
+                ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    del_zip = rs.getInt("del_zip");
+                    del_state = rs.getString("del_state");
+                    del_city = rs.getString("del_city");
+                }
             }
 
             for (int i = 0; i < item_id.size(); i++) {
-                preparedStatement = connection.prepareStatement
+                try (PreparedStatement ps = connection.prepareStatement
                         ("SELECT item_weight, item_vol, item_haz, item_prod " +
                                 "FROM Items " +
-                                "WHERE item_id = ?");
-                preparedStatement.setInt(1, item_id.get(i));
-                resultSet = preparedStatement.executeQuery();
-                while (resultSet.next()) {
-                    item_weight.add(i, resultSet.getDouble("item_weight"));
-                    item_vol.add(i, resultSet.getInt("item_vol"));
-                    item_haz.add(i, resultSet.getInt("item_haz"));
-                    item_prod.add(i, resultSet.getString("item_prod"));
+                                "WHERE item_id = ?")) {
+                    ps.setInt(1, item_id.get(i));
+                    ResultSet rs = ps.executeQuery();
+                    while (rs.next()) {
+                        item_weight.add(i, rs.getDouble("item_weight"));
+                        item_vol.add(i, rs.getInt("item_vol"));
+                        item_haz.add(i, rs.getInt("item_haz"));
+                        item_prod.add(i, rs.getString("item_prod"));
+                    }
                 }
             }
 
@@ -124,13 +135,9 @@ public class Database {
             JSONArray ja_lines = new JSONArray();
             List<JSONObject> joList = new ArrayList<>();
 
-            List<Boolean> item_hazBool = new ArrayList<>();
-            for (int i = 0; i < item_haz.size(); i++) {
-                if (item_haz.get(i) == 1) {
-                    item_hazBool.add(i, true);
-                } else {
-                    item_hazBool.add(i, false);
-                }
+            List<Boolean> item_haz_bool = new ArrayList<>();
+            for (Integer anItem_haz : item_haz) {
+                item_haz_bool.add(intToBoolean(anItem_haz));
             }
 
             for (int i = 0; i < item_id.size(); i++) {
@@ -138,7 +145,7 @@ public class Database {
                 joList.get(i).put("weight", item_weight.get(i));
                 joList.get(i).put("volume", item_vol.get(i));
                 joList.get(i).put("product", item_prod.get(i));
-                joList.get(i).put("hazard", item_hazBool.get(i));
+                joList.get(i).put("hazard", item_haz_bool.get(i));
                 ja_lines.put(joList.get(i));
             }
 
@@ -156,8 +163,9 @@ public class Database {
     protected int createOrder(
             String dep_zipStr, String dep_state, String dep_city,
             String del_zipStr, String del_state, String del_city,
-            List<Line> lineList
+            List<Line> lineList, DataSource ds
     ) {
+        Connection connection = openConnection(ds);
         int dep_zip = Integer.parseInt(dep_zipStr);
         int del_zip = Integer.parseInt(del_zipStr);
         int order_id = 0;
@@ -177,91 +185,104 @@ public class Database {
             item_prod.add(aLineList.getProduct());
         }
 
-        PreparedStatement preparedStatement;
-        ResultSet resultSet;
-
+        // Departure
         try {
-            preparedStatement = connection.prepareStatement(
+            try (PreparedStatement ps = connection.prepareStatement(
                     "INSERT INTO Departure " +
                             "(dep_id, dep_zip, dep_state, dep_city) " +
-                            "VALUES (dep_seq.nextval, ?, ?, ?)");
-            preparedStatement.setInt(1, dep_zip);
-            preparedStatement.setString(2, dep_state);
-            preparedStatement.setString(3, dep_city);
-            preparedStatement.executeUpdate();
+                            "VALUES (dep_seq.nextval, ?, ?, ?)")) {
+                ps.setInt(1, dep_zip);
+                ps.setString(2, dep_state);
+                ps.setString(3, dep_city);
+                ps.executeUpdate();
+            }
 
-            preparedStatement = connection.prepareStatement(
+            // Delivery
+            try (PreparedStatement ps = connection.prepareStatement(
                     "INSERT INTO Delivery " +
                             "(del_id, del_zip, del_state, del_city) " +
-                            "VALUES (del_seq.nextval, ?, ?, ?)");
-            preparedStatement.setInt(1, del_zip);
-            preparedStatement.setString(2, del_state);
-            preparedStatement.setString(3, del_city);
-            preparedStatement.executeUpdate();
+                            "VALUES (del_seq.nextval, ?, ?, ?)")) {
 
-            // Converting hazard boolean -> short
-            List<Integer> itemHazard = new ArrayList<>();
-            for (int i = 0; i < item_haz.size(); i++) {
-                if (item_haz.get(i)) {
-                    itemHazard.add(i, 1);
-                } else {
-                    itemHazard.add(i, 0);
-                }
+                ps.setInt(1, del_zip);
+                ps.setString(2, del_state);
+                ps.setString(3, del_city);
+                ps.executeUpdate();
             }
 
+            // Converting hazard boolean -> int
+            List<Integer> itemHazard = new ArrayList<>();
+            for (Boolean anItem_haz : item_haz) {
+                itemHazard.add(booleanToInt(anItem_haz));
+            }
+
+            // Items
             for (int i = 0; i < item_prod.size(); i++) {
-                preparedStatement = connection.prepareStatement(
+                try (PreparedStatement ps = connection.prepareStatement(
                         "INSERT INTO Items " +
                                 "(item_id, item_weight, item_vol, item_prod, item_haz) " +
-                                "VALUES (item_seq.nextval, ?, ?, ?, ?)");
-                preparedStatement.setDouble(1, item_weight.get(i));
-                preparedStatement.setDouble(2, item_vol.get(i));
-                preparedStatement.setString(3, item_prod.get(i));
-                preparedStatement.setInt(4, itemHazard.get(i));
-                preparedStatement.executeUpdate();
+                                "VALUES (item_seq.nextval, ?, ?, ?, ?)")) {
+                    ps.setDouble(1, item_weight.get(i));
+                    ps.setDouble(2, item_vol.get(i));
+                    ps.setString(3, item_prod.get(i));
+                    ps.setInt(4, itemHazard.get(i));
+                    ps.executeUpdate();
+                }
 
-                preparedStatement = connection.prepareStatement
+                // Retrieving item ID
+                try (PreparedStatement ps = connection.prepareStatement
                         ("SELECT item_seq.currval FROM dual");
-                resultSet = preparedStatement.executeQuery();
-                while (resultSet.next()) {
-                    item_id.add(i, resultSet.getInt(1));
+                     ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        item_id.add(i, rs.getInt(1));
+                    }
                 }
             }
 
-            preparedStatement = connection.prepareStatement
+            // Retrieving IDs
+            try (PreparedStatement ps = connection.prepareStatement
                     ("SELECT dep_seq.currval, del_seq.currval FROM dual");
-            resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()) {
-                dep_id = resultSet.getInt(1);
-                del_id = resultSet.getInt(2);
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    dep_id = rs.getInt(1);
+                    del_id = rs.getInt(2);
+                }
             }
 
-            preparedStatement = connection.prepareStatement(
+            // Orders
+            try (PreparedStatement ps = connection.prepareStatement(
                     "INSERT INTO Orders " +
                             "(order_id, dep_id, del_id) " +
-                            "VALUES (order_seq.nextval, ?, ?)");
-            preparedStatement.setInt(1, dep_id);
-            preparedStatement.setInt(2, del_id);
-            preparedStatement.executeUpdate();
+                            "VALUES (order_seq.nextval, ?, ?)")) {
 
-            preparedStatement = connection.prepareStatement
-                    ("SELECT order_seq.currval FROM dual");
-            resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()) {
-                order_id = resultSet.getInt(1);
+                ps.setInt(1, dep_id);
+                ps.setInt(2, del_id);
+                ps.executeUpdate();
             }
 
+            // Retrieving order ID
+            try (PreparedStatement ps = connection.prepareStatement
+                    ("SELECT order_seq.currval FROM dual");
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    order_id = rs.getInt(1);
+                }
+            }
+
+            // OrderItems
             for (int i = 0; i < item_prod.size(); i++) {
-                preparedStatement = connection.prepareStatement(
+                try (PreparedStatement ps = connection.prepareStatement(
                         "INSERT INTO OrderItems " +
                                 "(order_item, order_id, item_id) " +
-                                "VALUES (orderitem_seq.nextval, ?, ?)");
-                preparedStatement.setInt(1, order_id);
-                preparedStatement.setInt(2, item_id.get(i));
-                preparedStatement.executeUpdate();
+                                "VALUES (orderitem_seq.nextval, ?, ?)")) {
+                    ps.setInt(1, order_id);
+                    ps.setInt(2, item_id.get(i));
+                    ps.executeUpdate();
+                }
             }
         } catch (SQLException e) {
-            System.err.println("SQL error: " + e);
+            System.err.println("SQL error: " + e.getMessage());
+        } catch (NullPointerException e) {
+            System.err.println("NullPointerException error: " + e.getMessage());
         }
         return order_id;
     }

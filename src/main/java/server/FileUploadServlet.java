@@ -7,17 +7,21 @@ import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import server.object.Order;
 
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.stream.StreamSource;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 
 @MultipartConfig
 public class FileUploadServlet extends HttpServlet {
@@ -26,13 +30,11 @@ public class FileUploadServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         boolean isMultipart = ServletFileUpload.isMultipartContent(request);
-        Database db = new Database();
-        int order_id;
 
         if (isMultipart) {
             DiskFileItemFactory diskFileItemFactory = new DiskFileItemFactory();
             ServletFileUpload upload = new ServletFileUpload(diskFileItemFactory);
-            upload.setSizeMax(1048576 * 2); // 2 Megabyte
+            upload.setSizeMax(1048576); // 1 Megabyte
             InputStream inputStream;
 
             try {
@@ -42,14 +44,18 @@ public class FileUploadServlet extends HttpServlet {
                     FileItemStream item = iterator.next();
                     inputStream = item.openStream();
 
-                    try (BufferedReader input = new BufferedReader(new InputStreamReader(inputStream))) {
+                    try (BufferedReader input = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
                         String line;
-                        String contentOfFile = "";
+                        String contentOfFile;
+                        StringBuffer sb = new StringBuffer();
 
                         while ((line = input.readLine()) != null) {
-                            contentOfFile += line + "\n";
+                            sb.append(line).append("\n");
                         }
 
+                        contentOfFile = sb.toString();
+
+                        // Parsing the XML string
                         JAXBContext jaxbContext = JAXBContext.newInstance(Order.class);
                         Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
                         StreamSource source = new StreamSource(new StringReader(contentOfFile));
@@ -57,6 +63,11 @@ public class FileUploadServlet extends HttpServlet {
 
                         Order order = je.getValue();
 
+                        InitialContext initContext = new InitialContext();
+                        DataSource dataSource = (DataSource) initContext.lookup("java:comp/env/jdbc/op");
+
+                        Database db = new Database();
+                        int order_id;
                         order_id = db.createOrder(
                                 order.getFrom().getZip(),
                                 order.getFrom().getState(),
@@ -64,7 +75,8 @@ public class FileUploadServlet extends HttpServlet {
                                 order.getTo().getZip(),
                                 order.getTo().getState(),
                                 order.getTo().getCity(),
-                                order.getLines().getLine());
+                                order.getLines().getLine(),
+                                dataSource);
 
                         String orderID = Integer.toString(order_id);
                         response.setContentType("text/html");
@@ -73,6 +85,8 @@ public class FileUploadServlet extends HttpServlet {
                         out.close();
                     } catch (JAXBException e) {
                         System.err.println("JAXB error: " + e.getMessage());
+                    } catch (NamingException e) {
+                        System.err.println("Naming error: " + e.getMessage());
                     }
                 }
             } catch (FileUploadException e) {
