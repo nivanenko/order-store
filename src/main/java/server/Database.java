@@ -1,13 +1,10 @@
 package server;
 
+import com.zaxxer.hikari.HikariDataSource;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import server.object.Line;
 
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-import javax.sql.DataSource;
-import javax.xml.crypto.Data;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -16,17 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Database {
-    private Connection openConnection(DataSource ds) {
-        try {
-            InitialContext initContext = new InitialContext();
-            ds = (DataSource) initContext.lookup("java:comp/env/jdbc/op");
-            return ds.getConnection();
-        } catch (NamingException | SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
     private int booleanToInt(boolean value) {
         // Convert true to 1 and false to 0
         return value ? 1 : 0;
@@ -37,7 +23,7 @@ public class Database {
         return value == 1;
     }
 
-    protected JSONObject createJSON(int order_id) {
+    protected JSONObject createJSON(int order_id, HikariDataSource ds) {
         JSONObject jo_main = new JSONObject();
 
         int dep_id = 0, del_id = 0;
@@ -50,7 +36,7 @@ public class Database {
         List<Integer> item_haz = new ArrayList<>();
         List<String> item_prod = new ArrayList<>();
 
-        try {
+        try (Connection connection = ds.getConnection()) {
             try (PreparedStatement ps = connection.prepareStatement
                     ("SELECT item_id FROM OrderItems WHERE order_id = ?")) {
                 ps.setInt(1, order_id);
@@ -163,9 +149,8 @@ public class Database {
     protected int createOrder(
             String dep_zipStr, String dep_state, String dep_city,
             String del_zipStr, String del_state, String del_city,
-            List<Line> lineList, DataSource ds
+            List<Line> lineList, HikariDataSource ds
     ) {
-        Connection connection = openConnection(ds);
         int dep_zip = Integer.parseInt(dep_zipStr);
         int del_zip = Integer.parseInt(del_zipStr);
         int order_id = 0;
@@ -186,7 +171,7 @@ public class Database {
         }
 
         // Departure
-        try {
+        try (Connection connection = ds.getConnection()) {
             try (PreparedStatement ps = connection.prepareStatement(
                     "INSERT INTO Departure " +
                             "(dep_id, dep_zip, dep_state, dep_city) " +

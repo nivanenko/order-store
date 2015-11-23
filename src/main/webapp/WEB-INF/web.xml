@@ -26,7 +26,7 @@
     </servlet-mapping>
 
     <resource-ref>
-        <description>Oracle Datasource</description>
+        <description>Oracle DataSource</description>
         <res-ref-name>jdbc/op</res-ref-name>
         <res-type>javax.sql.DataSource</res-type>
         <res-auth>Container</res-auth>

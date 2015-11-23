@@ -1,5 +1,6 @@
 package server;
 
+import com.zaxxer.hikari.HikariDataSource;
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.FileUploadException;
@@ -14,7 +15,6 @@ import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.sql.DataSource;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -34,7 +34,7 @@ public class FileUploadServlet extends HttpServlet {
         if (isMultipart) {
             DiskFileItemFactory diskFileItemFactory = new DiskFileItemFactory();
             ServletFileUpload upload = new ServletFileUpload(diskFileItemFactory);
-            upload.setSizeMax(1048576); // 1 Megabyte
+            upload.setSizeMax(1048576 * 5); // 1 Megabyte
             InputStream inputStream;
 
             try {
@@ -60,11 +60,12 @@ public class FileUploadServlet extends HttpServlet {
                         Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
                         StreamSource source = new StreamSource(new StringReader(contentOfFile));
                         JAXBElement<Order> je = unmarshaller.unmarshal(source, Order.class);
-
                         Order order = je.getValue();
 
-                        InitialContext initContext = new InitialContext();
-                        DataSource dataSource = (DataSource) initContext.lookup("java:comp/env/jdbc/op");
+                        // Configuring DataSource
+                        InitialContext initial = new InitialContext();
+                        HikariDataSource ds;
+                        ds = (HikariDataSource) initial.lookup("java:comp/env/jdbc/op");
 
                         Database db = new Database();
                         int order_id;
@@ -76,7 +77,7 @@ public class FileUploadServlet extends HttpServlet {
                                 order.getTo().getState(),
                                 order.getTo().getCity(),
                                 order.getLines().getLine(),
-                                dataSource);
+                                ds);
 
                         String orderID = Integer.toString(order_id);
                         response.setContentType("text/html");
@@ -86,7 +87,7 @@ public class FileUploadServlet extends HttpServlet {
                     } catch (JAXBException e) {
                         System.err.println("JAXB error: " + e.getMessage());
                     } catch (NamingException e) {
-                        System.err.println("Naming error: " + e.getMessage());
+                        System.err.println("JNDI error: " + e.getMessage());
                     }
                 }
             } catch (FileUploadException e) {
