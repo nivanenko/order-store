@@ -51,7 +51,7 @@ $(document).ready(function () {
 
   // Using AjaxFileUpload lib
   $('input[type="file"]').ajaxfileupload({
-    'action': '/FileUploadServlet',
+    'action': '/asyncUpload',
     'onComplete': function (response) {
       if (isNaN(response) || response === 0) {
         $(uploadResult).hide();
@@ -86,7 +86,7 @@ $(document).ready(function () {
 
     $.ajax({
       type: 'POST',
-      url: '/LookupServlet',
+      url: '/lookup',
       data: {value: data},
       encode: true,
       success: function (response) {

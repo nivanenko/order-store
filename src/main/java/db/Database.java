@@ -1,9 +1,8 @@
-package server;
+package db;
 
 import com.zaxxer.hikari.HikariDataSource;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import server.object.Line;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -23,7 +22,7 @@ public class Database {
         return value == 1;
     }
 
-    protected JSONObject createJSON(int order_id, HikariDataSource ds) {
+    public JSONObject createJSON(int order_id, HikariDataSource ds) {
         JSONObject jo_main = new JSONObject();
 
         int dep_id = 0, del_id = 0;
@@ -146,10 +145,14 @@ public class Database {
         return null;
     }
 
-    protected int createOrder(
+    public int createOrder(
+            HikariDataSource ds,
             String dep_zipStr, String dep_state, String dep_city,
             String del_zipStr, String del_state, String del_city,
-            List<Line> lineList, HikariDataSource ds
+            List<Double> item_weight,
+            List<Double> item_vol,
+            List<Boolean> item_haz,
+            List<String> item_prod
     ) {
         int dep_zip = Integer.parseInt(dep_zipStr);
         int del_zip = Integer.parseInt(del_zipStr);
@@ -158,17 +161,17 @@ public class Database {
         int del_id = 0;
 
         List<Integer> item_id = new ArrayList<>();
-        List<Double> item_weight = new ArrayList<>();
-        List<Double> item_vol = new ArrayList<>();
-        List<Boolean> item_haz = new ArrayList<>();
-        List<String> item_prod = new ArrayList<>();
-
-        for (Line aLineList : lineList) {
-            item_weight.add(aLineList.getWeight());
-            item_vol.add(aLineList.getVolume());
-            item_haz.add(aLineList.isHazard());
-            item_prod.add(aLineList.getProduct());
-        }
+//        List<Double> item_weight = new ArrayList<>();
+//        List<Double> item_vol = new ArrayList<>();
+//        List<Boolean> item_haz = new ArrayList<>();
+//        List<String> item_prod = new ArrayList<>();
+//
+//        for (Line aLineList : lineList) {
+//            item_weight.add(aLineList.getWeight());
+//            item_vol.add(aLineList.getVolume());
+//            item_haz.add(aLineList.isHazard());
+//            item_prod.add(aLineList.getProduct());
+//        }
 
         // Departure
         try (Connection connection = ds.getConnection()) {

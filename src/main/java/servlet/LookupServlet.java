@@ -1,23 +1,23 @@
-package server;
+package servlet;
 
 import com.zaxxer.hikari.HikariDataSource;
 import org.json.JSONObject;
+import db.Database;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.servlet.ServletException;
-import javax.servlet.annotation.MultipartConfig;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-@MultipartConfig
+@WebServlet(name = "LookupServlet", urlPatterns = "/lookup")
 public class LookupServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
-    @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         Database db = new Database();
         PrintWriter out = response.getWriter();
