@@ -1,8 +1,8 @@
 package servlet;
 
 import com.zaxxer.hikari.HikariDataSource;
+import database.OrderHandling;
 import org.json.JSONObject;
-import db.Database;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -18,25 +18,24 @@ import java.io.PrintWriter;
 public class LookupServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        Database db = new Database();
-        PrintWriter out = response.getWriter();
-        String orderID = request.getParameter("value");
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        PrintWriter out = resp.getWriter();
+        String orderID = req.getParameter("value");
 
         try {
             // Configuring DataSource
             InitialContext initial = new InitialContext();
-            HikariDataSource ds;
-            ds = (HikariDataSource) initial.lookup("java:comp/env/jdbc/op");
-
-            JSONObject json = db.createJSON(Integer.parseInt(orderID), ds);
+            HikariDataSource ds = (HikariDataSource) initial.lookup("java:comp/env/jdbc/op");
+            JSONObject json = OrderHandling.createJSON(Integer.parseInt(orderID), ds);
 
             if (json == null) {
-                response.setContentType("text/html");
+                resp.setContentType("text/html");
                 out.print("error");
                 out.flush();
             } else {
-                response.setContentType("application/json");
+                resp.setContentType("application/json");
                 out.print(json);
                 out.flush();
             }
