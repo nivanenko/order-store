@@ -186,6 +186,7 @@ public class OrderHandling {
                 ps.setString(2, dep_state);
                 ps.setString(3, dep_city);
                 ps.executeUpdate();
+                conn.commit();
             }
 
             try (PreparedStatement ps = conn.prepareStatement( // Delivery
@@ -197,6 +198,7 @@ public class OrderHandling {
                 ps.setString(2, del_state);
                 ps.setString(3, del_city);
                 ps.executeUpdate();
+                conn.commit();
             }
 
             // boolean -> int
@@ -260,6 +262,7 @@ public class OrderHandling {
                 ps.setInt(1, dep_id);
                 ps.setInt(2, del_id);
                 ps.executeUpdate();
+                conn.commit();
             }
 
             try (PreparedStatement ps = conn.prepareStatement( // Retrieving order ID

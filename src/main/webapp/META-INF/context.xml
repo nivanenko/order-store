@@ -13,5 +13,6 @@
             dataSource.user="nazar"
             dataSource.password="12345"
             dataSource.url="jdbc:oracle:thin:@localhost:1521/orcl"
+            autoCommit = "false"
     />
 </Context>
