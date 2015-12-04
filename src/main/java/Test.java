@@ -1,6 +1,8 @@
 public class Test {
     public static void main(String[] args) {
-        String data = "----------------------------" +
+        String data = "------WebKitFormBoundary3QC5vb1wTpSsB3ND\n" +
+                "Content-Disposition: form-data; name=\"file\"; filename=\"1.xml\"\n" +
+                "Content-Type: text/xml\n" +
                 "\n" +
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                 "<order>\n" +
@@ -13,8 +15,7 @@ public class Test {
                 "    <instructions>here be dragons</instructions>\n" +
                 "</order> \n" +
                 "\n" +
-                "\n" +
-                "---------------------------";
+                "------WebKitFormBoundary3QC5vb1wTpSsB3ND--";
         String s = data.substring(
                 data.lastIndexOf("<order>"),
                 data.lastIndexOf("</order>") + 8);

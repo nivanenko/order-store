@@ -2,7 +2,6 @@ package servlet;
 
 import com.zaxxer.hikari.HikariDataSource;
 import database.OrderService;
-import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import util.MyReadListener;
 import util.XMLParser;
 
@@ -28,13 +27,10 @@ public class AsyncFileUploadServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        if (!ServletFileUpload.isMultipartContent(req)) {
-            return;
-        }
-        //TODO: make it work
+        System.err.println("In async servlet");
         long startTime = System.nanoTime();
-        AsyncContext context = req.startAsync(req, resp);
-        ServletInputStream input = req.getInputStream();
+        final AsyncContext context = req.startAsync();
+        final ServletInputStream input = req.getInputStream();
         MyReadListener listener = new MyReadListener(input, context);
         input.setReadListener(listener);
         listener.onDataAvailable();

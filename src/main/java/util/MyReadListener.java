@@ -4,13 +4,10 @@ import javax.servlet.AsyncContext;
 import javax.servlet.ReadListener;
 import javax.servlet.ServletInputStream;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class MyReadListener implements ReadListener {
     private ServletInputStream input = null;
     private AsyncContext context = null;
-//    String data;
 
     public MyReadListener(ServletInputStream in, AsyncContext ac) {
         this.input = in;
@@ -21,19 +18,18 @@ public class MyReadListener implements ReadListener {
     public void onDataAvailable() {
         try {
             StringBuilder sb = new StringBuilder();
-            int len = -1;
-            byte[] b = new byte[1024];
-            while (input.isReady()
-                    && (((len = input.read(b))) != -1)) {
-                String data = new String(b, 0, len);
-
-                String content = data.substring(
-                        data.lastIndexOf("<order>"),
-                        data.lastIndexOf("</order>") + 8);
-                XMLParser.parseString(content);
-            }
+            byte[] buffer = new byte[1024];
+            do {
+                int length = input.read(buffer);
+                sb.append(new String(buffer, 0, length));
+            } while (input.isReady());
+            System.out.println(sb);
+           String content = sb.substring(
+                    sb.lastIndexOf("<order>"),
+                    sb.lastIndexOf("</order>") + 8);
+            XMLParser.parseString(content);
         } catch (IOException e) {
-            Logger.getLogger(MyReadListener.class.getName()).log(Level.SEVERE, null, e);
+            System.err.println("IO error " + e.getMessage());
         }
     }
 
