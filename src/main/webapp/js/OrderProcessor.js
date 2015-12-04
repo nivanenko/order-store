@@ -1,6 +1,6 @@
 /*global $:false */
+"use strict";
 $(document).ready(function () {
-  "use strict";
 
   var init = '#init';
   var parameter = '.parameter';
@@ -34,6 +34,7 @@ $(document).ready(function () {
         $(errorLookupMsg).hide();
         $(lookupParam).hide();
         $(init).hide();
+
         $(uploadParam).show();
         break;
       case "lookup":
@@ -44,6 +45,7 @@ $(document).ready(function () {
         $(errorLookupMsg).hide();
         $(uploadParam).hide();
         $(init).hide();
+
         $(lookupParam).show();
         break;
     }

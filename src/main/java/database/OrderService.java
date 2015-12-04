@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
-public class OrderHandling {
+public class OrderService {
     private static final Pattern NO_WHITESPACE = Pattern.compile("\\s+$");
 
     private static int booleanToInt(boolean value) {
@@ -34,8 +34,8 @@ public class OrderHandling {
         List<Integer> item_haz = new ArrayList<>();
         List<String> item_prod = new ArrayList<>();
 
-        try (Connection connection = ds.getConnection()) {
-            try (PreparedStatement ps = connection.prepareStatement(
+        try (Connection conn = ds.getConnection()) {
+            try (PreparedStatement ps = conn.prepareStatement(
                     "SELECT item_id FROM OrderItems WHERE order_id = ?")) {
                 ps.setInt(1, orderId);
                 try (ResultSet rs = ps.executeQuery()) {
@@ -50,7 +50,7 @@ public class OrderHandling {
 
             int dep_id = 0;
             int del_id = 0;
-            try (PreparedStatement ps = connection.prepareStatement(
+            try (PreparedStatement ps = conn.prepareStatement(
                     "SELECT dep_id, del_id FROM Orders WHERE order_id = ?")) {
                 ps.setInt(1, orderId);
                 try (ResultSet rs = ps.executeQuery()) {
@@ -64,7 +64,7 @@ public class OrderHandling {
             int dep_zip = 0;
             String dep_state = "";
             String dep_city = "";
-            try (PreparedStatement ps = connection.prepareStatement(
+            try (PreparedStatement ps = conn.prepareStatement(
                     "SELECT dep_zip, dep_state, dep_city "
                             + "FROM Departure "
                             + "WHERE dep_id = ?")) {
@@ -81,7 +81,7 @@ public class OrderHandling {
             int del_zip = 0;
             String del_state = "";
             String del_city = "";
-            try (PreparedStatement ps = connection.prepareStatement(
+            try (PreparedStatement ps = conn.prepareStatement(
                     "SELECT del_zip, del_state, del_city "
                             + "FROM Delivery "
                             + "WHERE del_id = ?")) {
@@ -96,7 +96,7 @@ public class OrderHandling {
             }
 
             for (int i = 0; i < item_id.size(); i++) {
-                try (PreparedStatement ps = connection.prepareStatement(
+                try (PreparedStatement ps = conn.prepareStatement(
                         "SELECT item_weight, item_vol, item_haz, item_prod "
                                 + "FROM Items "
                                 + "WHERE item_id = ?")) {
@@ -112,7 +112,6 @@ public class OrderHandling {
                 }
             }
 
-            // Deleting whitespaces where it shouldn't be
             for (int i = 0; i < item_prod.size(); i++) {
                 item_prod.set(i, NO_WHITESPACE.matcher(item_prod.get(i)).replaceAll(""));
             }
@@ -172,7 +171,6 @@ public class OrderHandling {
         int del_zip = Integer.parseInt(del_zipStr);
         int order_id = 0;
         int itemSize = item_prod.size();
-
         List<Integer> item_id = new ArrayList<>();
 
         try (Connection conn = ds.getConnection()) {
@@ -186,7 +184,6 @@ public class OrderHandling {
                 ps.setString(2, dep_state);
                 ps.setString(3, dep_city);
                 ps.executeUpdate();
-                conn.commit();
             }
 
             try (PreparedStatement ps = conn.prepareStatement( // Delivery
@@ -198,7 +195,6 @@ public class OrderHandling {
                 ps.setString(2, del_state);
                 ps.setString(3, del_city);
                 ps.executeUpdate();
-                conn.commit();
             }
 
             // boolean -> int
@@ -206,7 +202,6 @@ public class OrderHandling {
             for (Boolean anItem_haz : item_haz) {
                 itemHazard.add(booleanToInt(anItem_haz));
             }
-
 
             try (PreparedStatement ps = conn.prepareStatement( // Items
                     "INSERT INTO Items "
@@ -221,7 +216,6 @@ public class OrderHandling {
                     ps.setString(3, item_prod.get(i));
                     ps.setInt(4, itemHazard.get(i));
                     ps.addBatch();
-
                     if ((++count % batchSize) == 0) {
                         ps.executeBatch();
                     }
@@ -262,7 +256,6 @@ public class OrderHandling {
                 ps.setInt(1, dep_id);
                 ps.setInt(2, del_id);
                 ps.executeUpdate();
-                conn.commit();
             }
 
             try (PreparedStatement ps = conn.prepareStatement( // Retrieving order ID
@@ -288,7 +281,9 @@ public class OrderHandling {
                     }
                 }
                 ps.executeBatch();
+                System.err.println("Added " + itemSize + " rows!");
             }
+            conn.commit();
         } catch (SQLException e) {
             System.err.println("SQL error: " + e.getMessage());
         } catch (NullPointerException e) {

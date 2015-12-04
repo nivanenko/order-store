@@ -5,7 +5,7 @@ import com.fasterxml.aalto.AsyncXMLInputFactory;
 import com.fasterxml.aalto.AsyncXMLStreamReader;
 import com.fasterxml.aalto.stax.InputFactoryImpl;
 import com.zaxxer.hikari.HikariDataSource;
-import database.OrderHandling;
+import database.OrderService;
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.FileUploadException;
@@ -35,7 +35,7 @@ import java.util.List;
 
 @WebServlet(name = "FileUploadServlet",
         urlPatterns = "/asyncUpload", asyncSupported = true)
-@MultipartConfig(maxFileSize = 10485760) // 10 megabyte
+@MultipartConfig(maxFileSize = 1048576 * 10) // 10 megabyte
 public class FileUploadServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
@@ -43,23 +43,22 @@ public class FileUploadServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         long startTime = System.nanoTime();
-        AsyncContext context = req.startAsync(req, resp);
+        final AsyncContext context = req.startAsync(req, resp);
 
         if (!ServletFileUpload.isMultipartContent(req)) {
             return;
         }
 
-        DiskFileItemFactory diskFileItemFactory = new DiskFileItemFactory();
-        ServletFileUpload upload = new ServletFileUpload(diskFileItemFactory);
-
+        DiskFileItemFactory fileFactory = new DiskFileItemFactory();
+        ServletFileUpload upload = new ServletFileUpload(fileFactory);
         try {
             FileItemIterator iterator = upload.getItemIterator(req);
             while (iterator.hasNext()) {
                 FileItemStream item = iterator.next();
-                InputStream inputStream = item.openStream();
+                InputStream stream = item.openStream();
 
                 try (BufferedReader input = new BufferedReader(
-                        new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+                        new InputStreamReader(stream, StandardCharsets.UTF_8));
                      PrintWriter out = resp.getWriter()) {
                     String line;
                     StringBuilder sb = new StringBuilder();
@@ -68,8 +67,8 @@ public class FileUploadServlet extends HttpServlet {
                     }
                     String content = sb.toString();
 
-                    AsyncXMLInputFactory factory = new InputFactoryImpl();
-                    AsyncXMLStreamReader<AsyncByteArrayFeeder> reader = factory.createAsyncForByteArray();
+                    AsyncXMLInputFactory inputFactory = new InputFactoryImpl();
+                    AsyncXMLStreamReader<AsyncByteArrayFeeder> reader = inputFactory.createAsyncForByteArray();
                     AsyncReaderWrapper wrapper = new AsyncReaderWrapper(reader, 1, content);
 
                     String depZip = "";
@@ -112,20 +111,21 @@ public class FileUploadServlet extends HttpServlet {
                     reader.close();
 
                     long stopTime = System.nanoTime();
-                    System.err.println("Finished parsing in " + (stopTime - startTime) /1000000000);
+                    System.err.println("Finished parsing in " + (stopTime - startTime) / 1000000000
+                            + " sec. Starting to fill the database...");
                     // Configuring DataSource
                     InitialContext initial = new InitialContext();
                     HikariDataSource ds = (HikariDataSource) initial.lookup("java:comp/env/jdbc/op");
 
                     startTime = System.nanoTime();
-                    int orderId = OrderHandling.createOrder(ds,
+                    int orderId = OrderService.createOrder(ds,
                             depZip, depState, depCity,
                             delZip, delState, delCity,
                             itemWeight, itemVol, itemHaz, itemProd
                     );
                     stopTime = System.nanoTime();
-                    System.err.println("Finished database filling in "
-                            + (stopTime - startTime) /1000000000 + " seconds");
+                    System.err.println("Finished the database filling in "
+                            + (stopTime - startTime) / 1000000000 + " sec");
 
                     String orderIdStr = Integer.toString(orderId);
                     resp.setContentType("text/html");
