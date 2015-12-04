@@ -28,6 +28,13 @@ public class AsyncReaderWrapper {
         }
     }
 
+    public AsyncReaderWrapper(AsyncXMLStreamReader<AsyncByteArrayFeeder> sr, int bytesPerCall,
+                              byte[] bytes) {
+        streamReader = sr;
+        xmlBytes = bytes;
+        bytesPerFeed = bytesPerCall;
+    }
+
     public String currentText() throws XMLStreamException {
         return streamReader.getText();
     }

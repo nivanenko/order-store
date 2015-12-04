@@ -15,12 +15,12 @@ import java.util.regex.Pattern;
 public class OrderService {
     private static final Pattern NO_WHITESPACE = Pattern.compile("\\s+$");
 
-    private static int booleanToInt(boolean value) {
+    private static int boolToInt(boolean value) {
         // Convert true to 1 and false to 0
         return value ? 1 : 0;
     }
 
-    private static boolean intToBoolean(int value) {
+    private static boolean intToBool(int value) {
         // Convert 1 to true and 0 to false
         return value == 1;
     }
@@ -135,7 +135,7 @@ public class OrderService {
 
             List<Boolean> item_haz_bool = new ArrayList<>();
             for (Integer anItem_haz : item_haz) {
-                item_haz_bool.add(intToBoolean(anItem_haz));
+                item_haz_bool.add(intToBool(anItem_haz));
             }
 
             for (int i = 0; i < item_id.size(); i++) {
@@ -197,10 +197,9 @@ public class OrderService {
                 ps.executeUpdate();
             }
 
-            // boolean -> int
             List<Integer> itemHazard = new ArrayList<>();
             for (Boolean anItem_haz : item_haz) {
-                itemHazard.add(booleanToInt(anItem_haz));
+                itemHazard.add(boolToInt(anItem_haz));
             }
 
             try (PreparedStatement ps = conn.prepareStatement( // Items
@@ -281,7 +280,6 @@ public class OrderService {
                     }
                 }
                 ps.executeBatch();
-                System.err.println("Added " + itemSize + " rows!");
             }
             conn.commit();
         } catch (SQLException e) {

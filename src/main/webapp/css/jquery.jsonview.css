@@ -1,6 +1,5 @@
 @charset "UTF-8";
 .jsonview {
-    /*font-family: monospace;*/
     font-size: 1.1em;
     white-space: pre-wrap;
 }
@@ -14,7 +13,7 @@
 }
 
 .jsonview .bool {
-    color: blue;
+    color: #ba23b8;
 }
 
 .jsonview .num {

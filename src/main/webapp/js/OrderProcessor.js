@@ -54,6 +54,7 @@ $(document).ready(function () {
   // Using AjaxFileUpload lib
   $('input[type="file"]').ajaxfileupload({
     'action': '/asyncUpload',
+    //'action': '/upload',
     'onComplete': function (response) {
       if (isNaN(response) || response === 0) {
         $(uploadResult).hide();
