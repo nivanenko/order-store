@@ -167,6 +167,8 @@ public class OrderService {
             List<Boolean> item_haz,
             List<String> item_prod
     ) {
+        if (dep_zipStr == null) return -1;
+
         int dep_zip = Integer.parseInt(dep_zipStr);
         int del_zip = Integer.parseInt(del_zipStr);
         int order_id = 0;

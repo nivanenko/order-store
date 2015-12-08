@@ -24,12 +24,10 @@ public class MyReadListener implements ReadListener {
                 sb.append(new String(buffer, 0, length));
             } while (input.isReady());
             System.out.println(sb);
-           String content = sb.substring(
-                    sb.lastIndexOf("<order>"),
-                    sb.lastIndexOf("</order>") + 8);
-            XMLParser.parseString(content);
         } catch (IOException e) {
             System.err.println("IO error " + e.getMessage());
+        } catch (IllegalStateException e) {
+            System.err.println("Illegal state exception: " + e.getMessage());
         }
     }
 

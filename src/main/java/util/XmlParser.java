@@ -63,40 +63,7 @@ public class XMLParser {
     }
 
     public static void parseString(String s) {
-        AsyncXMLInputFactory inputFactory = new InputFactoryImpl();
-        AsyncXMLStreamReader<AsyncByteArrayFeeder> reader = inputFactory.createAsyncForByteArray();
-        AsyncReaderWrapper wrapper = new AsyncReaderWrapper(reader, 1, s);
-        try {
-            int type = wrapper.nextToken();
-            while (type != XMLStreamConstants.END_DOCUMENT) {
-                if (type == XMLStreamConstants.START_ELEMENT) {
-                    switch (reader.getName().toString()) {
-                        case "from":
-                            depZip = reader.getAttributeValue(0);
-                            depState = reader.getAttributeValue(1);
-                            depCity = reader.getAttributeValue(2);
-                            break;
-                        case "to":
-                            delZip = reader.getAttributeValue(0);
-                            delState = reader.getAttributeValue(1);
-                            delCity = reader.getAttributeValue(2);
-                            break;
-                        case "line":
-                            itemWeight.add(reader.getAttributeAsDouble(0));
-                            itemVol.add(reader.getAttributeAsDouble(1));
-                            itemHaz.add(reader.getAttributeAsBoolean(2));
-                            itemProd.add(reader.getAttributeValue(3));
-                            break;
-                        default:
-                            break;
-                    }
-                }
-                type = wrapper.nextToken();
-            }
-            reader.close();
-        } catch (XMLStreamException e) {
-            System.err.println("XML error: " + e.getMessage());
-        }
+        parseBytes(s.getBytes());
     }
 
     public static void parseBytes(byte[] b) {
