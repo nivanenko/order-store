@@ -1,7 +1,7 @@
 package servlet;
 
 import com.zaxxer.hikari.HikariDataSource;
-import database.OrderService;
+import database.OrderHelper;
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.FileUploadException;
@@ -32,11 +32,8 @@ public class FileUploadServlet extends HttpServlet {
     @Override
     protected void doPost(final HttpServletRequest req, final HttpServletResponse resp)
             throws ServletException, IOException {
-        long startTime = System.nanoTime();
+        if (!ServletFileUpload.isMultipartContent(req)) return;
 
-        if (!ServletFileUpload.isMultipartContent(req)) {
-            return;
-        }
         try {
             DiskFileItemFactory fileFactory = new DiskFileItemFactory();
             ServletFileUpload upload = new ServletFileUpload(fileFactory);
@@ -56,21 +53,16 @@ public class FileUploadServlet extends HttpServlet {
                     String content = sb.toString();
                     XMLParser.parseString(content);
 
-                    // Configuring DataSource
                     InitialContext initial = new InitialContext();
                     HikariDataSource ds = (HikariDataSource) initial.lookup("java:comp/env/jdbc/op");
 
-                    int orderId = OrderService.createOrder(ds,
+                    int orderId = OrderHelper.createOrder(ds,
                             XMLParser.getDepZip(), XMLParser.getDepState(),
                             XMLParser.getDepCity(), XMLParser.getDelZip(),
                             XMLParser.getDelState(), XMLParser.getDelCity(),
                             XMLParser.getItemWeight(), XMLParser.getItemVol(),
                             XMLParser.getItemHaz(), XMLParser.getItemProd()
                     );
-
-                    long stopTime = System.nanoTime();
-                    System.err.println("Finished the database filling in "
-                            + (stopTime - startTime) / 1000000000 + " sec");
 
                     String orderIdStr = Integer.toString(orderId);
                     resp.setContentType("text/html");

@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
-public class OrderService {
+public class OrderHelper {
     private static final Pattern NO_WHITESPACE = Pattern.compile("\\s+$");
 
     private static int boolToInt(boolean value) {

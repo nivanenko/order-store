@@ -88,7 +88,7 @@ $(document).ready(function () {
     var data = $(lookupText).val();
 
     $.ajax({
-      type: 'POST',
+      type: 'GET',
       url: '/lookup',
       data: {value: data},
       encode: true,
