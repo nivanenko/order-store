@@ -3,7 +3,6 @@ package servlet;
 import com.zaxxer.hikari.HikariDataSource;
 import database.OrderHelper;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import util.MultipartHelper;
 import util.MyReadListener;
 import util.XMLParser;
 
@@ -22,7 +21,7 @@ import java.io.PrintWriter;
 
 @WebServlet(name = "AsyncFileUploadServlet",
         urlPatterns = "/asyncUpload", asyncSupported = true)
-@MultipartConfig(maxFileSize = 1048576 * 10) // 10 megabyte
+@MultipartConfig(maxFileSize = 1048576 * 10) // 10 MB
 public class AsyncFileUploadServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
@@ -32,16 +31,12 @@ public class AsyncFileUploadServlet extends HttpServlet {
         long startTime = System.nanoTime();
         if (!ServletFileUpload.isMultipartContent(req)) return;
 
-        // TODO: make it work
-
-        final AsyncContext context = req.startAsync();
+        final AsyncContext context = req.startAsync(req, resp);
         ServletInputStream input = req.getInputStream();
-
-        String boundary = MultipartHelper.extractBoundary(req.getHeader("Content-Type"));
-        MyReadListener listener = new MyReadListener(input, context, boundary);
-        input.setReadListener(listener);
+        MyReadListener listener = new MyReadListener(input, context);
         listener.onDataAvailable();
 
+        // DB stuff
         try (PrintWriter out = resp.getWriter()) {
             InitialContext initial = new InitialContext();
             HikariDataSource ds = (HikariDataSource) initial.lookup("java:comp/env/jdbc/op");

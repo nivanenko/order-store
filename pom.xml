@@ -29,27 +29,10 @@
             <artifactId>jaxb-api</artifactId>
             <version>2.2.12</version>
         </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-context</artifactId>
-                <version>4.2.3.RELEASE</version>
-            </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-webmvc</artifactId>
-            <version>4.2.3.RELEASE</version>
-            <exclusions>
-                <!-- Exclude Commons Logging in favor of SLF4j -->
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
         <dependency>
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
-            <version>2.4.1</version>
+            <version>2.4.3</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml</groupId>
@@ -57,24 +40,14 @@
             <version>1.0.0</version>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.7.13</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>1.7.13</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>1.7.13</version>
-        </dependency>
-        <dependency>
             <groupId>org.glassfish.grizzly</groupId>
             <artifactId>grizzly-http-server-multipart</artifactId>
             <version>2.3.23</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.elopteryx</groupId>
+            <artifactId>upload-parser</artifactId>
+            <version>2.0.1</version>
         </dependency>
     </dependencies>
 
