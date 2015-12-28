@@ -285,9 +285,9 @@ public class OrderHelper {
             }
             conn.commit();
         } catch (SQLException e) {
-            System.err.println("SQL error: " + e.getMessage());
+            System.err.println("SQL error occurred: " + e.getMessage());
         } catch (NullPointerException e) {
-            System.err.println("NullPointerException error: " + e.getMessage());
+            System.err.println("NullPointerException error occurred: " + e.getMessage());
         }
         return order_id;
     }

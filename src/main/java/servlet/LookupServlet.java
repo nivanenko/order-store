@@ -31,14 +31,12 @@ public class LookupServlet extends HttpServlet {
             if (json == null) {
                 resp.setContentType("text/html");
                 out.print("error");
-                out.flush();
             } else {
                 resp.setContentType("application/json");
                 out.print(json);
-                out.flush();
             }
         } catch (NamingException e) {
-            System.err.println("JNDI error: " + e.getMessage());
+            System.err.println("JNDI error occurred: " + e.getMessage());
         }
     }
 }

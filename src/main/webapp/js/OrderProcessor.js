@@ -51,7 +51,6 @@ $(document).ready(function () {
     }
   });
 
-  // Using AjaxFileUpload lib
   $('input[type="file"]').ajaxfileupload({
     //'action': '/asyncUpload',
     'action': '/upload',

@@ -25,7 +25,7 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 
 @WebServlet(name = "FileUploadServlet", urlPatterns = "/upload")
-@MultipartConfig(maxFileSize = 1048576 * 10) // 10 megabyte
+@MultipartConfig(maxFileSize = 1048576 * 5) // 5 megabyte
 public class FileUploadServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
@@ -68,13 +68,13 @@ public class FileUploadServlet extends HttpServlet {
                     resp.setContentType("text/html");
                     out.append(orderIdStr);
                 } catch (NamingException e) {
-                    System.err.println("JNDI error: " + e.getMessage());
+                    System.err.println("JNDI error occurred: " + e.getMessage());
                 }
             }
         } catch (IOException e) {
-            System.err.println("IO error:" + e.getMessage());
+            System.err.println("IO error occurred:" + e.getMessage());
         } catch (FileUploadException e) {
-            System.err.println("File upload error: " + e.getMessage());
+            System.err.println("File upload error occurred: " + e.getMessage());
         }
     }
 }

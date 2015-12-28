@@ -3,14 +3,11 @@ package servlet;
 import com.zaxxer.hikari.HikariDataSource;
 import database.OrderHelper;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import util.MyReadListener;
 import util.XMLParser;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import javax.servlet.AsyncContext;
 import javax.servlet.ServletException;
-import javax.servlet.ServletInputStream;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -24,6 +21,7 @@ import java.io.PrintWriter;
 @MultipartConfig(maxFileSize = 1048576 * 10) // 10 MB
 public class AsyncFileUploadServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
+    private static final long timeout = 3600000;
 
     @Override
     protected void doPost(final HttpServletRequest req, final HttpServletResponse resp)
@@ -31,10 +29,9 @@ public class AsyncFileUploadServlet extends HttpServlet {
         long startTime = System.nanoTime();
         if (!ServletFileUpload.isMultipartContent(req)) return;
 
-        final AsyncContext context = req.startAsync(req, resp);
-        ServletInputStream input = req.getInputStream();
-        MyReadListener listener = new MyReadListener(input, context);
-        listener.onDataAvailable();
+        /**
+            Not implemented yet
+        */
 
         // DB stuff
         try (PrintWriter out = resp.getWriter()) {

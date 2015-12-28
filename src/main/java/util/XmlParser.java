@@ -12,16 +12,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class XMLParser {
-    static String depZip = "";
-    static String depState = "";
-    static String depCity = "";
-    static String delZip = "";
-    static String delState = "";
-    static String delCity = "";
-    static List<Double> itemWeight = new ArrayList<>();
-    static List<Double> itemVol = new ArrayList<>();
-    static List<Boolean> itemHaz = new ArrayList<>();
-    static List<String> itemProd = new ArrayList<>();
+    private static String depZip = "";
+    private static String depState = "";
+    private static String depCity = "";
+    private static String delZip = "";
+    private static String delState = "";
+    private static String delCity = "";
+    private static List<Double> itemWeight = new ArrayList<>();
+    private static List<Double> itemVol = new ArrayList<>();
+    private static List<Boolean> itemHaz = new ArrayList<>();
+    private static List<String> itemProd = new ArrayList<>();
 
     public static String getDepState() {
         return depState;

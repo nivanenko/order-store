@@ -44,11 +44,6 @@
             <artifactId>grizzly-http-server-multipart</artifactId>
             <version>2.3.23</version>
         </dependency>
-        <dependency>
-            <groupId>com.github.elopteryx</groupId>
-            <artifactId>upload-parser</artifactId>
-            <version>2.0.1</version>
-        </dependency>
     </dependencies>
 
   <build>
