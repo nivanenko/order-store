@@ -1,13 +1,13 @@
 package servlet;
 
 import com.zaxxer.hikari.HikariDataSource;
-import database.OrderHelper;
+import database.DatabaseHelper;
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import util.XMLParser;
+import util.xml.XMLParser;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -51,17 +51,19 @@ public class FileUploadServlet extends HttpServlet {
                         sb.append(line).append('\n');
                     }
                     String content = sb.toString();
-                    XMLParser.parseString(content);
+                    XMLParser parser = new XMLParser();
+                    parser.parseString(content);
 
                     InitialContext initial = new InitialContext();
                     HikariDataSource ds = (HikariDataSource) initial.lookup("java:comp/env/jdbc/op");
 
-                    int orderId = OrderHelper.createOrder(ds,
-                            XMLParser.getDepZip(), XMLParser.getDepState(),
-                            XMLParser.getDepCity(), XMLParser.getDelZip(),
-                            XMLParser.getDelState(), XMLParser.getDelCity(),
-                            XMLParser.getItemWeight(), XMLParser.getItemVol(),
-                            XMLParser.getItemHaz(), XMLParser.getItemProd()
+                    DatabaseHelper db = new DatabaseHelper();
+                    int orderId = db.createOrder(ds,
+                            parser.getDepZip(), parser.getDepState(),
+                            parser.getDepCity(), parser.getDelZip(),
+                            parser.getDelState(), parser.getDelCity(),
+                            parser.getItemWeight(), parser.getItemVol(),
+                            parser.getItemHaz(), parser.getItemProd()
                     );
 
                     String orderIdStr = Integer.toString(orderId);

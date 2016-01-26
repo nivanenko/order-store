@@ -1,13 +1,16 @@
 package servlet;
 
 import com.zaxxer.hikari.HikariDataSource;
-import database.OrderHelper;
+import database.DatabaseHelper;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import util.XMLParser;
+import util.FileUploadListener;
+import util.xml.XMLParser;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import javax.servlet.AsyncContext;
 import javax.servlet.ServletException;
+import javax.servlet.ServletInputStream;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -21,7 +24,6 @@ import java.io.PrintWriter;
 @MultipartConfig(maxFileSize = 1048576 * 10) // 10 MB
 public class AsyncFileUploadServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private static final long timeout = 3600000;
 
     @Override
     protected void doPost(final HttpServletRequest req, final HttpServletResponse resp)
@@ -29,21 +31,22 @@ public class AsyncFileUploadServlet extends HttpServlet {
         long startTime = System.nanoTime();
         if (!ServletFileUpload.isMultipartContent(req)) return;
 
-        /**
-            Not implemented yet
-        */
+        ServletInputStream input = req.getInputStream();
+        AsyncContext context = req.startAsync();
+        input.setReadListener(new FileUploadListener(input, context));
 
-        // DB stuff
         try (PrintWriter out = resp.getWriter()) {
             InitialContext initial = new InitialContext();
-            HikariDataSource ds = (HikariDataSource) initial.lookup("java:comp/env/jdbc/op");
+            HikariDataSource ds = (HikariDataSource) initial.lookup("java:comp/env/jdbc/op"); // JNDI. See META-INF/context.xml
 
-            int orderId = OrderHelper.createOrder(ds,
-                    XMLParser.getDepZip(), XMLParser.getDepState(),
-                    XMLParser.getDepCity(), XMLParser.getDelZip(),
-                    XMLParser.getDelState(), XMLParser.getDelCity(),
-                    XMLParser.getItemWeight(), XMLParser.getItemVol(),
-                    XMLParser.getItemHaz(), XMLParser.getItemProd()
+            XMLParser parser = new XMLParser();
+            DatabaseHelper db = new DatabaseHelper();
+            int orderId = db.createOrder(ds,
+                    parser.getDepZip(), parser.getDepState(),
+                    parser.getDepCity(), parser.getDelZip(),
+                    parser.getDelState(), parser.getDelCity(),
+                    parser.getItemWeight(), parser.getItemVol(),
+                    parser.getItemHaz(), parser.getItemProd()
             );
 
             long stopTime = System.nanoTime();

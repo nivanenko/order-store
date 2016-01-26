@@ -12,20 +12,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
-public class OrderHelper {
+public class DatabaseHelper {
     private static final Pattern NO_WHITESPACE = Pattern.compile("\\s+$");
 
-    private static int boolToInt(boolean value) {
+    private int boolToInt(boolean value) {
         // Convert true to 1 and false to 0
         return value ? 1 : 0;
     }
 
-    private static boolean intToBool(int value) {
+    private boolean intToBool(int value) {
         // Convert 1 to true and 0 to false
         return value == 1;
     }
 
-    public static JSONObject createJSON(int orderId, HikariDataSource ds) {
+    public JSONObject createJSON(int orderId, HikariDataSource ds) {
         JSONObject jo_main = new JSONObject();
 
         List<Integer> item_id = new ArrayList<>();
@@ -158,7 +158,7 @@ public class OrderHelper {
         return null;
     }
 
-    public static int createOrder(
+    public int createOrder(
             HikariDataSource ds,
             String dep_zipStr, String dep_state, String dep_city,
             String del_zipStr, String del_state, String del_city,

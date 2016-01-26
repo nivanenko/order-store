@@ -52,8 +52,8 @@ $(document).ready(function () {
   });
 
   $('input[type="file"]').ajaxfileupload({
-    //'action': '/asyncUpload',
-    'action': '/upload',
+    'action': '/asyncUpload',
+    //'action': '/upload',
     'onComplete': function (response) {
       if (isNaN(response) || response === 0 || response === -1) {
         $(uploadResult).hide();
@@ -90,6 +90,7 @@ $(document).ready(function () {
       type: 'GET',
       url: '/lookup',
       data: {value: data},
+      dataType: "json",
       encode: true,
       success: function (response) {
         if (response === 'error') {

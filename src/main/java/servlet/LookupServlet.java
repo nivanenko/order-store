@@ -1,7 +1,7 @@
 package servlet;
 
 import com.zaxxer.hikari.HikariDataSource;
-import database.OrderHelper;
+import database.DatabaseHelper;
 import org.json.JSONObject;
 
 import javax.naming.InitialContext;
@@ -26,7 +26,8 @@ public class LookupServlet extends HttpServlet {
         try (PrintWriter out = resp.getWriter()) {
             InitialContext initial = new InitialContext();
             HikariDataSource ds = (HikariDataSource) initial.lookup("java:comp/env/jdbc/op");
-            JSONObject json = OrderHelper.createJSON(Integer.parseInt(orderID), ds);
+            DatabaseHelper db = new DatabaseHelper();
+            JSONObject json = db.createJSON(Integer.parseInt(orderID), ds);
 
             if (json == null) {
                 resp.setContentType("text/html");
