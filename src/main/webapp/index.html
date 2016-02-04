@@ -18,16 +18,17 @@
         <tr>
             <td>
                 <div class="radio">
-                    <label for="createOption"><input type="radio" id="createOption" name="options" value="create">Create
-                        Order</label>
+                    <label for="createOption"><input type="radio" id="createOption" name="options" value="create">
+                        Create Order</label>
                     <br>
-                    <label for="lookupOption"><input type="radio" id="lookupOption" name="options" value="lookup">Lookup
-                        Order</label>
+                    <label for="lookupOption"><input type="radio" id="lookupOption" name="options" value="lookup">
+                        Lookup Order</label>
                 </div>
             </td>
         </tr>
     </table>
     <h4 class="h4">Parameters</h4>
+
     <table class="param-table" id="mainTable" style="display: none;">
         <tr class="parameter" id="uploadParam">
             <td class="td-align-top">
@@ -41,7 +42,6 @@
                     <input type="file" name="file" id="fileInput" class="margin-top" accept=".xml"
                            style="display: none;">
                 </form>
-                <span style="color: #868686; font-size: 12px">Max size - 10 MB</span>
             </td>
         </tr>
 
@@ -63,6 +63,7 @@
             </td>
         </tr>
     </table>
+
     <table class="param-table" id="init">
         <tr>
             <td>
@@ -73,12 +74,14 @@
         </tr>
     </table>
 </div>
+
 <div class="messages">
     <div class="success">
         <div id="uploadResult" style="display: none;"></div>
         <div id="lookupID" style="display: none"></div>
         <div id="lookupResult" style="display: none;"></div>
     </div>
+
     <div class="errors">
         <div id="errorUploadMsg" style="display: none;"><p>An error
             occurred while the file being uploaded!</p></div>

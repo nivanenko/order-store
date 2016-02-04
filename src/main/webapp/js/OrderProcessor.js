@@ -37,6 +37,7 @@ $(document).ready(function () {
 
         $(uploadParam).show();
         break;
+
       case "lookup":
         $(lookupID).hide();
         $(lookupResult).hide();
@@ -110,6 +111,7 @@ $(document).ready(function () {
         }
       },
       error: function () {
+        $(lookupResult).hide();
         $(lookupID).hide();
         $(errorLookupMsg).show();
         $(lookupSubmit).text('Lookup');

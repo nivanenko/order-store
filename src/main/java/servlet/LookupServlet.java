@@ -1,6 +1,5 @@
 package servlet;
 
-import com.zaxxer.hikari.HikariDataSource;
 import database.DatabaseHelper;
 import org.json.JSONObject;
 
@@ -11,6 +10,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
 import java.io.IOException;
 import java.io.PrintWriter;
 
@@ -25,7 +25,8 @@ public class LookupServlet extends HttpServlet {
 
         try (PrintWriter out = resp.getWriter()) {
             InitialContext initial = new InitialContext();
-            HikariDataSource ds = (HikariDataSource) initial.lookup("java:comp/env/jdbc/op");
+            DataSource ds = (DataSource) initial.lookup("java:comp/env/jdbc/op");
+
             DatabaseHelper db = new DatabaseHelper();
             JSONObject json = db.createJSON(Integer.parseInt(orderID), ds);
 

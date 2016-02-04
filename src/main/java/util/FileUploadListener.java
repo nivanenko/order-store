@@ -1,38 +1,42 @@
 package util;
 
+import database.DatabaseHelper;
+import util.xml.XMLParser;
+
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.servlet.AsyncContext;
 import javax.servlet.ReadListener;
 import javax.servlet.ServletInputStream;
+import javax.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
 import java.io.IOException;
+import java.io.PrintWriter;
 
 public class FileUploadListener implements ReadListener {
     private ServletInputStream input = null;
     private AsyncContext context = null;
+    private String xml = null;
+    private HttpServletResponse resp = null;
 
-    public FileUploadListener(ServletInputStream in, AsyncContext ac) {
+    public FileUploadListener(ServletInputStream in, AsyncContext ac, HttpServletResponse resp) {
         this.input = in;
         this.context = ac;
+        this.resp = resp;
     }
 
     @Override
     public void onDataAvailable() {
-        System.out.println("In onDataAvailable");
         try {
             StringBuilder sb = new StringBuilder();
-            byte[] buffer = new byte[2*1024]; // 2 KB
+            byte[] buffer = new byte[1024]; // 1 KB
             do {
                 int length = input.read(buffer);
                 sb.append(new String(buffer, 0, length));
             } while (input.isReady());
 
-            System.out.println("SB length " + sb.length());
-
             String content = sb.toString();
-            String boundary = content.substring(0, content.indexOf("\r\n"));
-            System.out.println(boundary);
-//            Pattern pattern1 = Pattern.compile("(?<=Content\\-Type:)(.*?)(?=\\r\\n\\r\\n)");
-//            Pattern pattern2 = Pattern.compile("[\\r\\n]+\\-");
-
+            xml = content.substring(content.indexOf("<order>"), content.indexOf("</order>") + 8);
         } catch (IOException e) {
             System.err.println("IO error " + e.getMessage());
         } catch (IllegalStateException e) {
@@ -42,13 +46,35 @@ public class FileUploadListener implements ReadListener {
 
     @Override
     public void onAllDataRead() {
-        System.out.println("All data read");
+        try (PrintWriter out = resp.getWriter()) {
+            InitialContext initial = new InitialContext();
+            DataSource ds = (DataSource) initial.lookup("java:comp/env/jdbc/op");
+
+            XMLParser parser = new XMLParser(xml);
+            DatabaseHelper db = new DatabaseHelper();
+            int orderId = db.createOrder(ds,
+                    parser.getDepZip(), parser.getDepState(),
+                    parser.getDepCity(), parser.getDelZip(),
+                    parser.getDelState(), parser.getDelCity(),
+                    parser.getItemWeight(), parser.getItemVol(),
+                    parser.getItemHaz(), parser.getItemProd()
+            );
+
+            String orderIdStr = Integer.toString(orderId);
+            resp.setContentType("text/html");
+            out.append(orderIdStr);
+        } catch (NamingException e) {
+            System.err.println("JNDI error: " + e.getMessage());
+        } catch (IOException e) {
+            System.err.println("IO error: " + e.getMessage());
+        }
+
         context.complete();
     }
 
     @Override
     public void onError(Throwable t) {
-        System.err.println("Error!");
+        System.err.println("Error: " + t.getMessage());
         context.complete();
     }
 }

@@ -1,9 +1,10 @@
 package database;
 
-import com.zaxxer.hikari.HikariDataSource;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import util.Converter;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -15,24 +16,56 @@ import java.util.regex.Pattern;
 public class DatabaseHelper {
     private static final Pattern NO_WHITESPACE = Pattern.compile("\\s+$");
 
-    private int boolToInt(boolean value) {
-        // Convert true to 1 and false to 0
-        return value ? 1 : 0;
+    private ArrayList<Integer> getItemID(Connection conn, ArrayList<String> item_prod) {
+        ArrayList<Integer> item_id = new ArrayList<>();
+        int itemIdTemp = 0;
+
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT item_seq.currval FROM dual");
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                itemIdTemp = rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.err.println("SQL error occurred while getting the item ID: " + e.getMessage());
+        }
+
+        itemIdTemp -= item_prod.size();
+        for (int i = 0; i < item_prod.size(); i++) {
+            itemIdTemp++;
+            item_id.add(i, itemIdTemp);
+        }
+
+        return item_id;
     }
 
-    private boolean intToBool(int value) {
-        // Convert 1 to true and 0 to false
-        return value == 1;
+    private int getOrderID(Connection conn) {
+        int order_id = 0;
+
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT order_seq.currval FROM dual");
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                order_id = rs.getInt(1);
+
+                if (order_id != 0) {
+                    return order_id;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("SQL error occurred while getting the item ID: " + e.getMessage());
+        }
+        return order_id;
     }
 
-    public JSONObject createJSON(int orderId, HikariDataSource ds) {
-        JSONObject jo_main = new JSONObject();
+    public JSONObject createJSON(int orderId, DataSource ds) {
+        JSONObject jsonMain = new JSONObject();
 
-        List<Integer> item_id = new ArrayList<>();
-        List<Double> item_weight = new ArrayList<>();
-        List<Integer> item_vol = new ArrayList<>();
-        List<Integer> item_haz = new ArrayList<>();
-        List<String> item_prod = new ArrayList<>();
+        ArrayList<Integer> item_id = new ArrayList<>();
+        ArrayList<Double> item_weight = new ArrayList<>();
+        ArrayList<Integer> item_vol = new ArrayList<>();
+        ArrayList<Integer> item_haz = new ArrayList<>();
+        ArrayList<String> item_prod = new ArrayList<>();
 
         try (Connection conn = ds.getConnection()) {
             try (PreparedStatement ps = conn.prepareStatement(
@@ -120,37 +153,37 @@ public class DatabaseHelper {
             del_city = NO_WHITESPACE.matcher(del_city).replaceAll("");
             del_state = NO_WHITESPACE.matcher(del_state).replaceAll("");
 
-            JSONObject jo_dep = new JSONObject();
-            jo_dep.put("zip", dep_zip);
-            jo_dep.put("state", dep_state);
-            jo_dep.put("city", dep_city);
+            JSONObject jsonDeparture = new JSONObject();
+            jsonDeparture.put("zip", dep_zip);
+            jsonDeparture.put("state", dep_state);
+            jsonDeparture.put("city", dep_city);
 
-            JSONObject jo_del = new JSONObject();
-            jo_del.put("zip", del_zip);
-            jo_del.put("state", del_state);
-            jo_del.put("city", del_city);
+            JSONObject jsonDelivery = new JSONObject();
+            jsonDelivery.put("zip", del_zip);
+            jsonDelivery.put("state", del_state);
+            jsonDelivery.put("city", del_city);
 
-            JSONArray ja_lines = new JSONArray();
-            List<JSONObject> joList = new ArrayList<>();
+            JSONArray jsonLines = new JSONArray();
+            List<JSONObject> jsonItemList = new ArrayList<>();
 
-            List<Boolean> item_haz_bool = new ArrayList<>();
-            for (Integer anItem_haz : item_haz) {
-                item_haz_bool.add(intToBool(anItem_haz));
+            List<Boolean> itemHazTemp = new ArrayList<>();
+            for (Integer itemHazTempTemp : item_haz) {
+                itemHazTemp.add(Converter.intToBool(itemHazTempTemp));
             }
 
             for (int i = 0; i < item_id.size(); i++) {
-                joList.add(i, new JSONObject());
-                joList.get(i).put("weight", item_weight.get(i));
-                joList.get(i).put("volume", item_vol.get(i));
-                joList.get(i).put("product", item_prod.get(i));
-                joList.get(i).put("hazard", item_haz_bool.get(i));
-                ja_lines.put(joList.get(i));
+                jsonItemList.add(i, new JSONObject());
+                jsonItemList.get(i).put("weight", item_weight.get(i));
+                jsonItemList.get(i).put("volume", item_vol.get(i));
+                jsonItemList.get(i).put("product", item_prod.get(i));
+                jsonItemList.get(i).put("hazard", itemHazTemp.get(i));
+                jsonLines.put(jsonItemList.get(i));
             }
 
-            jo_main.put("from", jo_dep);
-            jo_main.put("to", jo_del);
-            jo_main.put("lines", ja_lines);
-            return jo_main;
+            jsonMain.put("from", jsonDeparture);
+            jsonMain.put("to", jsonDelivery);
+            jsonMain.put("lines", jsonLines);
+            return jsonMain;
 
         } catch (SQLException e) {
             System.err.println("SQL error: " + e.getMessage());
@@ -159,21 +192,20 @@ public class DatabaseHelper {
     }
 
     public int createOrder(
-            HikariDataSource ds,
+            DataSource ds,
             String dep_zipStr, String dep_state, String dep_city,
             String del_zipStr, String del_state, String del_city,
-            List<Double> item_weight,
-            List<Double> item_vol,
-            List<Boolean> item_haz,
-            List<String> item_prod
+            ArrayList<Double> item_weight,
+            ArrayList<Double> item_vol,
+            ArrayList<Boolean> item_haz,
+            ArrayList<String> item_prod
     ) {
         if (dep_zipStr == null) return -1;
 
+        int order_id = 0;
         int dep_zip = Integer.parseInt(dep_zipStr);
         int del_zip = Integer.parseInt(del_zipStr);
-        int order_id = 0;
         int itemSize = item_prod.size();
-        List<Integer> item_id = new ArrayList<>();
 
         try (Connection conn = ds.getConnection()) {
             conn.setAutoCommit(false);
@@ -186,22 +218,32 @@ public class DatabaseHelper {
                 ps.setString(2, dep_state);
                 ps.setString(3, dep_city);
                 ps.executeUpdate();
+            } catch (SQLException e) {
+                conn.rollback();
+                conn.setAutoCommit(true);
+                System.err.println("Table \"Departure\" has failed to be inserted in. Rollback... ");
+                System.err.println("SQL error: " + e.getMessage());
             }
 
             try (PreparedStatement ps = conn.prepareStatement( // Delivery
                     "INSERT INTO Delivery "
                             + "(del_id, del_zip, del_state, del_city) "
                             + "VALUES (del_seq.nextval, ?, ?, ?)")) {
-
                 ps.setInt(1, del_zip);
                 ps.setString(2, del_state);
                 ps.setString(3, del_city);
                 ps.executeUpdate();
+            } catch (SQLException e) {
+                conn.rollback();
+                conn.setAutoCommit(true);
+                System.err.println("Table \"Delivery\" has failed to be inserted in. Rollback... ");
+                System.err.println("SQL error: " + e.getMessage());
             }
 
+            // Changing boolean type into the integer type
             List<Integer> itemHazard = new ArrayList<>();
             for (Boolean anItem_haz : item_haz) {
-                itemHazard.add(boolToInt(anItem_haz));
+                itemHazard.add(Converter.boolToInt(anItem_haz));
             }
 
             try (PreparedStatement ps = conn.prepareStatement( // Items
@@ -222,22 +264,12 @@ public class DatabaseHelper {
                     }
                 }
                 ps.executeBatch();
+            } catch (SQLException e) {
+                conn.rollback();
+                conn.setAutoCommit(true);
+                System.err.println("Table \"Items\" has failed to be inserted in. Rollback... ");
+                System.err.println("SQL error: " + e.getMessage());
             }
-
-            int itemIdTemp = 0; // getting item ID
-            try (PreparedStatement ps = conn.prepareStatement(
-                    "SELECT item_seq.currval FROM dual");
-                 ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    itemIdTemp = rs.getInt(1);
-                }
-            }
-            itemIdTemp -= item_prod.size();
-            for (int i = 0; i < item_prod.size(); i++) {
-                itemIdTemp++;
-                item_id.add(i, itemIdTemp);
-            }
-
 
             int dep_id = 0, del_id = 0; // Retrieving IDs
             try (PreparedStatement ps = conn.prepareStatement(
@@ -257,16 +289,15 @@ public class DatabaseHelper {
                 ps.setInt(1, dep_id);
                 ps.setInt(2, del_id);
                 ps.executeUpdate();
+            } catch (SQLException e) {
+                conn.rollback();
+                conn.setAutoCommit(true);
+                System.err.println("Table \"Orders\" has failed to be inserted in. Rollback... ");
+                System.err.println("SQL error: " + e.getMessage());
             }
 
-            try (PreparedStatement ps = conn.prepareStatement( // Retrieving order ID
-                    "SELECT order_seq.currval FROM dual");
-                 ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    order_id = rs.getInt(1);
-                }
-            }
-
+            order_id = getOrderID(conn);
+            ArrayList<Integer> item_id = getItemID(conn, item_prod);
             try (PreparedStatement ps = conn.prepareStatement( // OrderItems
                     "INSERT INTO OrderItems "
                             + "(order_item, order_id, item_id) "
@@ -282,10 +313,17 @@ public class DatabaseHelper {
                     }
                 }
                 ps.executeBatch();
+            } catch (SQLException e) {
+                conn.rollback();
+                conn.setAutoCommit(true);
+                System.err.println("Table \"Orders\" has failed to be inserted in. Rollback... ");
+                System.err.println("SQL error: " + e.getMessage());
             }
+
             conn.commit();
+            conn.setAutoCommit(true);
         } catch (SQLException e) {
-            System.err.println("SQL error occurred: " + e.getMessage());
+            System.err.println("SQL error: " + e.getMessage());
         } catch (NullPointerException e) {
             System.err.println("NullPointerException error occurred: " + e.getMessage());
         }

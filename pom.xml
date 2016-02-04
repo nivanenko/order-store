@@ -50,6 +50,11 @@
             <artifactId>ojdbc6</artifactId>
             <version>12.1.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat</groupId>
+            <artifactId>catalina</artifactId>
+            <version>6.0.44</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -65,7 +70,6 @@
                     <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
@@ -74,7 +78,6 @@
                     <failOnMissingWebXml>false</failOnMissingWebXml>
                 </configuration>
             </plugin>
-
             <plugin>
             <artifactId>maven-assembly-plugin</artifactId>
             <version>2.6</version>

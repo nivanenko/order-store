@@ -1,6 +1,5 @@
 package servlet;
 
-import com.zaxxer.hikari.HikariDataSource;
 import database.DatabaseHelper;
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
@@ -12,11 +11,11 @@ import util.xml.XMLParser;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.servlet.ServletException;
-import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,7 +24,6 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 
 @WebServlet(name = "FileUploadServlet", urlPatterns = "/upload")
-@MultipartConfig(maxFileSize = 1048576 * 5) // 5 megabyte
 public class FileUploadServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
@@ -50,12 +48,11 @@ public class FileUploadServlet extends HttpServlet {
                     while ((line = input.readLine()) != null) {
                         sb.append(line).append('\n');
                     }
-                    String content = sb.toString();
-                    XMLParser parser = new XMLParser();
-                    parser.parseString(content);
+
+                    XMLParser parser = new XMLParser(sb.toString());
 
                     InitialContext initial = new InitialContext();
-                    HikariDataSource ds = (HikariDataSource) initial.lookup("java:comp/env/jdbc/op");
+                    DataSource ds = (DataSource) initial.lookup("java:comp/env/jdbc/op");
 
                     DatabaseHelper db = new DatabaseHelper();
                     int orderId = db.createOrder(ds,

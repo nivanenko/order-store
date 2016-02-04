@@ -7,8 +7,8 @@ import com.fasterxml.aalto.stax.InputFactoryImpl;
 
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 public class XMLParser {
     private String depZip = "";
@@ -17,10 +17,18 @@ public class XMLParser {
     private String delZip = "";
     private String delState = "";
     private String delCity = "";
-    private List<Double> itemWeight = new ArrayList<>();
-    private List<Double> itemVol = new ArrayList<>();
-    private List<Boolean> itemHaz = new ArrayList<>();
-    private List<String> itemProd = new ArrayList<>();
+    private ArrayList<Double> itemWeight = new ArrayList<>();
+    private ArrayList<Double> itemVol = new ArrayList<>();
+    private ArrayList<Boolean> itemHaz = new ArrayList<>();
+    private ArrayList<String> itemProd = new ArrayList<>();
+
+
+    public XMLParser() {
+    }
+
+    public XMLParser(String strToParse) {
+        parseString(strToParse);
+    }
 
     public String getDepState() {
         return depState;
@@ -42,19 +50,19 @@ public class XMLParser {
         return delCity;
     }
 
-    public List<Double> getItemWeight() {
+    public ArrayList<Double> getItemWeight() {
         return itemWeight;
     }
 
-    public List<Double> getItemVol() {
+    public ArrayList<Double> getItemVol() {
         return itemVol;
     }
 
-    public List<Boolean> getItemHaz() {
+    public ArrayList<Boolean> getItemHaz() {
         return itemHaz;
     }
 
-    public List<String> getItemProd() {
+    public ArrayList<String> getItemProd() {
         return itemProd;
     }
 
@@ -62,14 +70,18 @@ public class XMLParser {
         return depZip;
     }
 
-    public void parseString(String s) {
-        parseBytes(s.getBytes());
+    public void parseString(String str) {
+        try {
+            parseBytes(str.getBytes("UTF-8"));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    private void parseBytes(byte[] b) {
+    private void parseBytes(byte[] bytes) {
         AsyncXMLInputFactory inputFactory = new InputFactoryImpl();
         AsyncXMLStreamReader<AsyncByteArrayFeeder> reader = inputFactory.createAsyncForByteArray();
-        AsyncReaderWrapper wrapper = new AsyncReaderWrapper(reader, 1, b);
+        AsyncReaderWrapper wrapper = new AsyncReaderWrapper(reader, 1, bytes);
         try {
             int type = wrapper.nextToken();
             while (type != XMLStreamConstants.END_DOCUMENT) {
@@ -99,7 +111,7 @@ public class XMLParser {
             }
             reader.close();
         } catch (XMLStreamException e) {
-            System.err.println("XML error: " + e.getMessage());
+            System.err.println("XML parsing error: " + e.getMessage());
         }
     }
 }
