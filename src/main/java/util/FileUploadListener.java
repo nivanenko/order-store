@@ -33,7 +33,7 @@ public class FileUploadListener implements ReadListener {
             do {
                 int length = input.read(buffer);
                 sb.append(new String(buffer, 0, length));
-            } while (input.isReady());
+            } while (input.isReady() && !input.isFinished());
 
             String content = sb.toString();
             xml = content.substring(content.indexOf("<order>"), content.indexOf("</order>") + 8);
@@ -75,6 +75,7 @@ public class FileUploadListener implements ReadListener {
     @Override
     public void onError(Throwable t) {
         System.err.println("Error: " + t.getMessage());
+        t.printStackTrace();
         context.complete();
     }
 }
