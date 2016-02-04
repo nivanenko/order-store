@@ -35,6 +35,8 @@ public class FileUploadListener implements ReadListener {
                 sb.append(new String(buffer, 0, length));
             } while (input.isReady() && !input.isFinished());
 
+            // NOTE: here's temp solution
+
             String content = sb.toString();
             xml = content.substring(content.indexOf("<order>"), content.indexOf("</order>") + 8);
         } catch (IOException e) {
