@@ -1,8 +1,8 @@
 # Order Store
-It's an application with following functions:
- - Uploading an order by a XML file;
- - Storing in the database your order;
- - Fetching the order by the unique ID.
+Application with the following functions:
+ - Uploading orders by an XML file;
+ - Storing orders in the database (Oracle);
+ - Retrieving the order by the unique ID.
  
 ## Screenshot
 
