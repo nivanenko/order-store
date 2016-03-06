@@ -7,6 +7,7 @@ import com.odyssey.util.xml.XMLParser;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class OrderService {
@@ -19,6 +20,7 @@ public class OrderService {
         this.dao = dao;
     }
 
+    @Transactional
     public int addOrder(String xml) {
         XMLParser parser = new XMLParser(order, xml);
         parser.parseString();
