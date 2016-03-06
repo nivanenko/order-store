@@ -1,4 +1,5 @@
 *.iml
+*.properties
 /out/
 .idea/
 log/

@@ -17,13 +17,13 @@
 }
 
 .green {
-    color: #2ecc71;
-    border: 2px #2ecc71 solid;
+    color: rgba(56, 58, 201, 1);
+    border: 2px rgba(56, 58, 201, 1) solid;
 }
 
 .green:hover {
     color: #fff;
-    background-color: #2ecc71;
+    background-color: rgba(56, 58, 201, 1);
 }
 
 .buttons {

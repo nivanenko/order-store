@@ -1,4 +1,4 @@
-package util;
+package com.odyssey.util;
 
 public class Converter {
     public static int boolToInt(boolean value) {

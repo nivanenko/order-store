@@ -1,4 +1,4 @@
-package util.xml;
+package com.odyssey.util.xml;
 
 import com.fasterxml.aalto.AsyncByteArrayFeeder;
 import com.fasterxml.aalto.AsyncXMLStreamReader;

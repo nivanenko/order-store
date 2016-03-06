@@ -6,4 +6,4 @@ It's an application with following functions:
  
 ## Screenshot
 
-![capture](https://cloud.githubusercontent.com/assets/7365641/11208801/e88ef774-8d25-11e5-838d-9fd1a853adc3.PNG)
+![capture](https://cloud.githubusercontent.com/assets/7365641/13473121/90e85aa8-e0c0-11e5-9149-356af2043f03.PNG)

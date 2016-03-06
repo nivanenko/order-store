@@ -1,15 +1,16 @@
-<!DOCTYPE html>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <html lang="en">
 <head>
     <meta http-equiv="content-type" content="text/html" charset="UTF-8">
     <title>Order Store</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/jquery.jsonview.css">
-    <link rel="stylesheet" href="css/button.css">
-    <script src="js/jquery-2.1.4.js"></script>
-    <script src="js/ajaxfileupload.js"></script>
-    <script src="js/jquery.jsonview.js"></script>
-    <script src="js/OrderProcessor.js"></script>
+    <link href="<c:url value="/resources/css/style.css" />" rel="stylesheet"  type="text/css" />
+    <link href="<c:url value="/resources/css/jquery.jsonview.css" />" rel="stylesheet"  type="text/css" />
+    <link href="<c:url value="/resources/css/button.css" />" rel="stylesheet"  type="text/css" />
+    <script type="text/javascript" src="<c:url value="/resources/js/jquery-2.1.4.js" />"></script>
+    <script type="text/javascript" src="<c:url value="/resources/js/ajaxfileupload.js" />"></script>
+    <script type="text/javascript" src="<c:url value="/resources/js/jquery.jsonview.js" />"></script>
+    <script type="text/javascript" src="<c:url value="/resources/js/index.js" />"></script>
 </head>
 <body>
 <div id="page-wrapper">

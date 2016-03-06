@@ -53,8 +53,7 @@ $(document).ready(function () {
   });
 
   $('input[type="file"]').ajaxfileupload({
-    'action': '/asyncUpload',
-    //'action': '/upload',
+    'action': '/upload',
     'onComplete': function (response) {
       if (isNaN(response) || response === 0 || response === -1) {
         $(uploadResult).hide();
