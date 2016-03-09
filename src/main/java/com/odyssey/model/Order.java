@@ -5,11 +5,11 @@ import java.util.ArrayList;
 
 public class Order implements Serializable {
 
-    private int depZip;
+    private String depZip;
     private String depState;
     private String depCity;
 
-    private int delZip;
+    private String delZip;
     private String delState;
     private String delCity;
 
@@ -19,11 +19,11 @@ public class Order implements Serializable {
     private ArrayList<Boolean> itemHaz = new ArrayList<>();
     private ArrayList<String> itemProd = new ArrayList<>();
 
-    public int getDepZip() {
+    public String getDepZip() {
         return depZip;
     }
 
-    public void setDepZip(int depZip) {
+    public void setDepZip(String depZip) {
         this.depZip = depZip;
     }
 
@@ -43,11 +43,11 @@ public class Order implements Serializable {
         this.depCity = depCity;
     }
 
-    public int getDelZip() {
+    public String getDelZip() {
         return delZip;
     }
 
-    public void setDelZip(int delZip) {
+    public void setDelZip(String delZip) {
         this.delZip = delZip;
     }
 
@@ -71,39 +71,19 @@ public class Order implements Serializable {
         return itemID;
     }
 
-    public void setItemID(ArrayList<Integer> itemID) {
-        this.itemID = itemID;
-    }
-
     public ArrayList<Double> getItemWeight() {
         return itemWeight;
-    }
-
-    public void setItemWeight(ArrayList<Double> itemWeight) {
-        this.itemWeight = itemWeight;
     }
 
     public ArrayList<Double> getItemVol() {
         return itemVol;
     }
 
-    public void setItemVol(ArrayList<Double> itemVol) {
-        this.itemVol = itemVol;
-    }
-
     public ArrayList<Boolean> getItemHaz() {
         return itemHaz;
     }
 
-    public void setItemHaz(ArrayList<Boolean> itemHaz) {
-        this.itemHaz = itemHaz;
-    }
-
     public ArrayList<String> getItemProd() {
         return itemProd;
-    }
-
-    public void setItemProd(ArrayList<String> itemProd) {
-        this.itemProd = itemProd;
     }
 }

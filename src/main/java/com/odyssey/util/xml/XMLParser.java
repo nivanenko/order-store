@@ -41,12 +41,12 @@ public class XMLParser {
                 if (type == XMLStreamConstants.START_ELEMENT) {
                     switch (reader.getName().toString()) {
                         case "from":
-                            order.setDepZip(reader.getAttributeAsInt(0));
+                            order.setDepZip(reader.getAttributeValue(0));
                             order.setDepState(reader.getAttributeValue(1));
                             order.setDepCity(reader.getAttributeValue(2));
                             break;
                         case "to":
-                            order.setDelZip(reader.getAttributeAsInt(0));
+                            order.setDelZip(reader.getAttributeValue(0));
                             order.setDelState(reader.getAttributeValue(1));
                             order.setDelCity(reader.getAttributeValue(2));
                             break;

@@ -17,7 +17,6 @@
 
     <dependencies>
         <!-- Spring Framework -->
-
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
@@ -60,7 +59,7 @@
             <version>${fasterxml.version}</version>
         </dependency>
 
-        <!-- Connection pool -->
+        <!-- Database -->
         <dependency>
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>

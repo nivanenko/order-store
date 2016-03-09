@@ -2,7 +2,6 @@ package com.odyssey.dao;
 
 import com.odyssey.model.Order;
 import com.odyssey.util.Converter;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -13,8 +12,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class OrderDAOImpl implements OrderDAO {
-    @Autowired
-    private Order order;
 
     private JdbcTemplate jdbcTemplate;
 
@@ -113,7 +110,9 @@ public class OrderDAOImpl implements OrderDAO {
 
     @Override
     public Order get(int orderID) {
-        // Getting item_id
+        Order order = new Order();
+
+        //TODO: jdbcTemplate for SELECT queries
 
         return order;
     }

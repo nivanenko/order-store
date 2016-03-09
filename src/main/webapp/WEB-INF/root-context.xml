@@ -2,20 +2,33 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:p="http://www.springframework.org/schema/p"
-       xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
-       xmlns:aop="http://www.springframework.org/schema/aop"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+       xmlns:c="http://www.springframework.org/schema/c"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+       http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.1.xsd">
 
     <context:annotation-config/>
 
     <context:property-placeholder location="/resources/db.properties"/>
 
-    <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource"
-          p:driverClassName="${jdbc.driverClassName}"
-          p:url="${jdbc.url}"
-          p:username="${jdbc.username}"
-          p:password="${jdbc.password}"
-    />
+    <bean id="hihariConfig" class="com.zaxxer.hikari.HikariConfig"
+          p:poolName="springHikariCP"
+          p:dataSourceClassName="oracle.jdbc.pool.OracleDataSource"
+          p:dataSourceProperties-ref="dataSourcePropertiesProps"/>
+
+    <util:properties id="dataSourcePropertiesProps">
+        <prop key="url">${jdbc.url}</prop>
+        <prop key="user">${jdbc.username}</prop>
+        <prop key="password">${jdbc.password}</prop>
+    </util:properties>
+
+    <bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource"
+          c:configuration-ref="hihariConfig"/>
 
     <bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager"
           p:dataSource-ref="dataSource"/>
@@ -24,11 +37,9 @@
     <bean name="orderDAO" class="com.odyssey.dao.OrderDAOImpl"
           p:dataSource-ref="dataSource"/>
 
-    <bean name="orderDAOPS" class="com.odyssey.dao.OrderDAOImplPS"
+    <bean name="orderDAOOld" class="com.odyssey.dao.OrderDAOImplOld"
           p:ds-ref="dataSource"/>
 
     <bean name="orderService" class="com.odyssey.service.OrderService"
-          p:dao-ref="orderDAOPS"/>
-
-    <bean name="order" class="com.odyssey.model.Order"/>
+          p:dao-ref="orderDAO"/>
 </beans>

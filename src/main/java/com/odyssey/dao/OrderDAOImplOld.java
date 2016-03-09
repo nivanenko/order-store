@@ -2,7 +2,6 @@ package com.odyssey.dao;
 
 import com.odyssey.model.Order;
 import com.odyssey.util.Converter;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.Resource;
 import javax.sql.DataSource;
@@ -13,9 +12,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
 
-public class OrderDAOImplPS implements OrderDAO {
-    @Autowired
-    private Order order;
+public class OrderDAOImplOld implements OrderDAO {
 
     private DataSource ds;
 
@@ -37,7 +34,7 @@ public class OrderDAOImplPS implements OrderDAO {
                     "INSERT INTO Departure "
                             + "(dep_id, dep_zip, dep_state, dep_city) "
                             + "VALUES (dep_seq.nextval, ?, ?, ?)")) {
-                ps.setInt(1, order.getDepZip());
+                ps.setString(1, order.getDepZip());
                 ps.setString(2, order.getDelState());
                 ps.setString(3, order.getDepCity());
                 ps.executeUpdate();
@@ -52,7 +49,7 @@ public class OrderDAOImplPS implements OrderDAO {
                     "INSERT INTO Delivery "
                             + "(del_id, del_zip, del_state, del_city) "
                             + "VALUES (del_seq.nextval, ?, ?, ?)")) {
-                ps.setInt(1, order.getDelZip());
+                ps.setString(1, order.getDelZip());
                 ps.setString(2, order.getDelState());
                 ps.setString(3, order.getDelCity());
                 ps.executeUpdate();
@@ -154,6 +151,8 @@ public class OrderDAOImplPS implements OrderDAO {
 
     @Override
     public Order get(int orderID) {
+        Order order = new Order();
+
         try (Connection conn = ds.getConnection()) {
 
             // Getting item IDs
@@ -194,7 +193,7 @@ public class OrderDAOImplPS implements OrderDAO {
                 ps.setInt(1, dep_id);
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
-                        order.setDepZip(rs.getInt("dep_zip"));
+                        order.setDepZip(rs.getString("dep_zip"));
                         order.setDepState(rs.getString("dep_state"));
                         order.setDepCity(rs.getString("dep_city"));
                     }
@@ -209,7 +208,7 @@ public class OrderDAOImplPS implements OrderDAO {
                 ps.setInt(1, del_id);
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
-                        order.setDelZip(rs.getInt("del_zip"));
+                        order.setDelZip(rs.getString("del_zip"));
                         order.setDelState(rs.getString("del_state"));
                         order.setDelCity(rs.getString("del_city"));
                     }

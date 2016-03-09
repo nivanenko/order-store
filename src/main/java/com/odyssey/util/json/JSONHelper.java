@@ -8,8 +8,8 @@ import java.util.List;
 
 public class JSONHelper {
     public static JSONObject createJSONForOrder(
-            int dep_zip, String dep_state, String dep_city,
-            int del_zip, String del_state, String del_city,
+            String dep_zip, String dep_state, String dep_city,
+            String del_zip, String del_state, String del_city,
             ArrayList<Integer> item_id, ArrayList<Double> item_weight, ArrayList<Double> item_vol,
             ArrayList<String> item_prod, ArrayList<Boolean> item_haz) {
         JSONObject jsonMain = new JSONObject();
