@@ -22,14 +22,9 @@ public class LookupController {
     public void lookup(@RequestParam("value") String orderID, HttpServletResponse resp) {
         JSONObject json = orderService.getOrder(Integer.parseInt(orderID));
 
-        try(PrintWriter out = resp.getWriter()) {
-            if (json == null) {
-                resp.setContentType("text/html");
-                out.print("error");
-            } else {
-                resp.setContentType("application/json");
-                out.print(json);
-            }
+        try (PrintWriter out = resp.getWriter()) {
+            resp.setContentType("application/json");
+            out.print(json);
         } catch (IOException e) {
             System.err.println("IO error: " + e.getMessage());
             e.printStackTrace();

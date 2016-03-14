@@ -25,8 +25,6 @@ public class FileUploadListener implements ReadListener {
 
     @Override
     public void onDataAvailable() {
-        // TODO: Implement true-async
-
         try {
             StringBuilder sb = new StringBuilder();
             byte[] buffer = new byte[1024]; // 1 KB

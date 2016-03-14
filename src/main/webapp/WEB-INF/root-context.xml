@@ -38,7 +38,7 @@
           p:dataSource-ref="dataSource"/>
 
     <bean name="orderDAOOld" class="com.odyssey.dao.OrderDAOImplOld"
-          p:ds-ref="dataSource"/>
+          p:dataSource-ref="dataSource"/>
 
     <bean name="orderService" class="com.odyssey.service.OrderService"
           p:dao-ref="orderDAO"/>

@@ -53,7 +53,7 @@ public class XMLParser {
                         case "line":
                             order.getItemWeight().add(reader.getAttributeAsDouble(0));
                             order.getItemVol().add(reader.getAttributeAsDouble(1));
-                            order.getItemHaz().add(reader.getAttributeAsBoolean(2));
+                            order.getItemHazBool().add(reader.getAttributeAsBoolean(2));
                             order.getItemProd().add(reader.getAttributeValue(3));
                             break;
                         default:

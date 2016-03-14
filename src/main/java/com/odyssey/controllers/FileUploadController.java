@@ -23,7 +23,6 @@ public class FileUploadController {
     public void uploadFile(HttpServletRequest req, HttpServletResponse resp) {
         final AsyncContext context = req.startAsync(req, resp);
 
-        // TODO: Implement true-async
         context.start(() -> {
             try {
                 ServletInputStream input = req.getInputStream();

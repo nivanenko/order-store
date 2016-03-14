@@ -27,11 +27,6 @@ public class JSONHelper {
         JSONArray jsonLines = new JSONArray();
         List<JSONObject> jsonItemList = new ArrayList<>();
 
-//        List<Boolean> itemHazTemp = new ArrayList<>();
-//        for (Integer itemHazTempTemp : item_haz) {
-//            itemHazTemp.add(Converter.intToBool(itemHazTempTemp));
-//        }
-
         for (int i = 0; i < item_id.size(); i++) {
             jsonItemList.add(i, new JSONObject());
             jsonItemList.get(i).put("weight", item_weight.get(i));

@@ -93,13 +93,6 @@ $(document).ready(function () {
       dataType: "json",
       encode: true,
       success: function (response) {
-        if (response === 'error') {
-          $(lookupID).hide();
-          $(lookupResult).hide();
-
-          $(errorLookupMsg).show();
-          $(lookupSubmit).text('Lookup');
-        } else {
           $(errorLookupMsg).hide();
 
           $(lookupID).html('<p>Order for ID: <span style=\'color: green; font-weight: bold\'>' + data
@@ -107,7 +100,7 @@ $(document).ready(function () {
           var json = JSON.stringify(response);
           $(lookupResult).JSONView(json).show();
           $(lookupSubmit).text('Lookup');
-        }
+        //}
       },
       error: function () {
         $(lookupResult).hide();

@@ -2,6 +2,8 @@ package com.odyssey.service;
 
 import com.odyssey.dao.OrderDAO;
 import com.odyssey.model.Order;
+import com.odyssey.util.Converter;
+import com.odyssey.util.StringUtil;
 import com.odyssey.util.json.JSONHelper;
 import com.odyssey.util.xml.XMLParser;
 import org.json.JSONObject;
@@ -23,16 +25,39 @@ public class OrderService {
         XMLParser parser = new XMLParser(order, xml);
         parser.parseString();
 
+        // Converting boolean type into the integer one for Oracle DB
+        int itemSize = order.getItemHazBool().size();
+        for (int i = 0; i < itemSize; i++) {
+            order.getItemHazInt().add(i, Converter.boolToInt(order.getItemHazBool().get(i)));
+        }
+
         return dao.add(order);
     }
 
     public JSONObject getOrder(int orderID) {
         Order order = dao.get(orderID);
+        int itemSize = order.getItemID().size();
+
+        // Deleting whitespaces
+        for (int i = 0; i < itemSize; i++) {
+            order.getItemProd().set(i, StringUtil.deleteSpaces(order.getItemProd().get(i)));
+        }
+        order.setDepZip(StringUtil.deleteSpaces(order.getDepZip()));
+        order.setDepCity(StringUtil.deleteSpaces(order.getDepCity()));
+        order.setDepState(StringUtil.deleteSpaces(order.getDepState()));
+        order.setDelZip(StringUtil.deleteSpaces(order.getDelZip()));
+        order.setDelCity(StringUtil.deleteSpaces(order.getDepCity()));
+        order.setDelState(StringUtil.deleteSpaces(order.getDelState()));
+
+        // Converting hazard int value into boolean
+        for (int i = 0; i < itemSize; i++) {
+            order.getItemHazBool().add(i, Converter.intToBool(order.getItemHazInt().get(i)));
+        }
 
         return JSONHelper.createJSONForOrder(
                 order.getDepZip(), order.getDepState(), order.getDepCity(),
                 order.getDelZip(), order.getDelState(), order.getDelCity(),
                 order.getItemID(), order.getItemWeight(), order.getItemVol(),
-                order.getItemProd(), order.getItemHaz());
+                order.getItemProd(), order.getItemHazBool());
     }
 }

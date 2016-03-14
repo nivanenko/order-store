@@ -1,7 +1,6 @@
 package com.odyssey.dao;
 
 import com.odyssey.model.Order;
-import com.odyssey.util.Converter;
 
 import javax.annotation.Resource;
 import javax.sql.DataSource;
@@ -10,14 +9,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.regex.Pattern;
 
 public class OrderDAOImplOld implements OrderDAO {
 
     private DataSource ds;
 
     @Resource(name = "dataSource")
-    public void setDs(DataSource ds) {
+    public void setDataSource(DataSource ds) {
         this.ds = ds;
     }
 
@@ -59,12 +57,6 @@ public class OrderDAOImplOld implements OrderDAO {
                 System.err.println("SQL error: " + e.getMessage());
             }
 
-            // Converting boolean type into the integer one for Oracle DB
-            ArrayList<Integer> itemHaz = new ArrayList<>();
-            for (Boolean anItemHaz : order.getItemHaz()) {
-                itemHaz.add(Converter.boolToInt(anItemHaz));
-            }
-
             // Items
             try (PreparedStatement ps = conn.prepareStatement(
                     "INSERT INTO Items "
@@ -77,7 +69,7 @@ public class OrderDAOImplOld implements OrderDAO {
                     ps.setDouble(1, order.getItemWeight().get(i));
                     ps.setDouble(2, order.getItemVol().get(i));
                     ps.setString(3, order.getItemProd().get(i));
-                    ps.setInt(4, itemHaz.get(i));
+                    ps.setInt(4, order.getItemHazInt().get(i));
                     ps.addBatch();
                     if ((++count % batchSize) == 0) {
                         ps.executeBatch();
@@ -154,7 +146,6 @@ public class OrderDAOImplOld implements OrderDAO {
         Order order = new Order();
 
         try (Connection conn = ds.getConnection()) {
-
             // Getting item IDs
             try (PreparedStatement ps = conn.prepareStatement(
                     "SELECT item_id FROM OrderItems WHERE order_id = ?")) {
@@ -168,8 +159,6 @@ public class OrderDAOImplOld implements OrderDAO {
                     } while (rs.next());
                 }
             }
-
-            int itemSize = order.getItemID().size();
 
             // Getting dep/del IDs
             int dep_id = 0;
@@ -185,7 +174,7 @@ public class OrderDAOImplOld implements OrderDAO {
                 }
             }
 
-            // Getting departure details
+            // Getting departure info
             try (PreparedStatement ps = conn.prepareStatement(
                     "SELECT dep_zip, dep_state, dep_city "
                             + "FROM Departure "
@@ -200,7 +189,7 @@ public class OrderDAOImplOld implements OrderDAO {
                 }
             }
 
-            // Getting delivery details
+            // Getting delivery info
             try (PreparedStatement ps = conn.prepareStatement(
                     "SELECT del_zip, del_state, del_city "
                             + "FROM Delivery "
@@ -216,9 +205,8 @@ public class OrderDAOImplOld implements OrderDAO {
             }
 
             // Getting items
+            int itemSize = order.getItemID().size();
 
-            // Temp list for hazard value
-            ArrayList<Integer> itemHazInt = new ArrayList<>();
             for (int i = 0; i < itemSize; i++) {
                 try (PreparedStatement ps = conn.prepareStatement(
                         "SELECT item_weight, item_vol, item_haz, item_prod "
@@ -229,29 +217,12 @@ public class OrderDAOImplOld implements OrderDAO {
                         while (rs.next()) {
                             order.getItemWeight().add(i, rs.getDouble("item_weight"));
                             order.getItemVol().add(i, rs.getDouble("item_vol"));
-                            itemHazInt.add(i, rs.getInt("item_haz"));
+                            order.getItemHazInt().add(i, rs.getInt("item_haz"));
                             order.getItemProd().add(i, rs.getString("item_prod"));
                         }
                     }
                 }
             }
-
-            // Adding converted hazard info into Order
-            for (Integer anItemHaz : itemHazInt) {
-                order.getItemHaz().add(Converter.intToBool(anItemHaz));
-            }
-
-
-            // Cleaning whitespaces
-            Pattern NO_WHITESPACE = Pattern.compile("\\s+$");
-
-            for (int i = 0; i < itemSize; i++) {
-                order.getItemProd().set(i, NO_WHITESPACE.matcher(order.getItemProd().get(i)).replaceAll(""));
-            }
-            order.setDepCity(NO_WHITESPACE.matcher(order.getDepCity()).replaceAll(""));
-            order.setDepState(NO_WHITESPACE.matcher(order.getDepState()).replaceAll(""));
-            order.setDelCity(NO_WHITESPACE.matcher(order.getDelCity()).replaceAll(""));
-            order.setDelState(NO_WHITESPACE.matcher(order.getDelState()).replaceAll(""));
         } catch (SQLException e) {
             System.err.println("SQL error: " + e.getMessage());
         }

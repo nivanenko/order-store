@@ -1,13 +1,14 @@
 package com.odyssey.dao;
 
 import com.odyssey.model.Order;
-import com.odyssey.util.Converter;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 
 import javax.annotation.Resource;
 import javax.sql.DataSource;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
@@ -38,14 +39,8 @@ public class OrderDAOImpl implements OrderDAO {
                         "VALUES (del_seq.nextval, ?, ?, ?)",
                 order.getDelZip(), order.getDelState(), order.getDelCity());
 
-        // Converting boolean type into the integer one for Oracle DB
-        ArrayList<Integer> itemHaz = new ArrayList<>();
-        for (Boolean anItemHaz : order.getItemHaz()) {
-            itemHaz.add(Converter.boolToInt(anItemHaz));
-        }
-
         // Items table inserting
-        jdbcTemplate.batchUpdate(
+            jdbcTemplate.batchUpdate(
                 "INSERT INTO Items " +
                         "(item_id, item_weight, item_vol, item_prod, item_haz) " +
                         "VALUES (item_seq.nextval, ?, ?, ?, ?)",
@@ -55,7 +50,7 @@ public class OrderDAOImpl implements OrderDAO {
                         ps.setDouble(1, order.getItemWeight().get(i));
                         ps.setDouble(2, order.getItemVol().get(i));
                         ps.setString(3, order.getItemProd().get(i));
-                        ps.setInt(4, itemHaz.get(i));
+                        ps.setInt(4, order.getItemHazInt().get(i));
                     }
 
                     @Override
@@ -110,10 +105,81 @@ public class OrderDAOImpl implements OrderDAO {
 
     @Override
     public Order get(int orderID) {
-        Order order = new Order();
+        final Order order = new Order();
 
-        //TODO: jdbcTemplate for SELECT queries
+        // Getting item IDs
+        jdbcTemplate.queryForObject(
+                "SELECT item_id FROM OrderItems WHERE order_id = ?", new Object[]{orderID},
+                new RowMapper<Order>() {
+                    @Override
+                    public Order mapRow(ResultSet rs, int rowNum) throws SQLException {
+                        do {
+                            order.getItemID().add(rs.getInt("item_id"));
+                        } while (rs.next());
+                        return order;
+                    }
+                });
 
+        // Getting dep/del IDs
+        jdbcTemplate.queryForObject(
+                "SELECT dep_id, del_id FROM Orders WHERE order_id = ?", new Object[]{orderID},
+                new RowMapper<Order>() {
+                    @Override
+                    public Order mapRow(ResultSet rs, int rowNum) throws SQLException {
+                        order.setDepID(rs.getInt("dep_id"));
+                        order.setDelID(rs.getInt("del_id"));
+                        return order;
+                    }
+                });
+
+        // Getting departure info
+        jdbcTemplate.queryForObject(
+                "SELECT dep_zip, dep_state, dep_city "
+                        + "FROM Departure "
+                        + "WHERE dep_id = ?", new Object[]{order.getDepID()},
+                new RowMapper<Order>() {
+                    @Override
+                    public Order mapRow(ResultSet rs, int rowNum) throws SQLException {
+                        order.setDepZip(rs.getString("dep_zip"));
+                        order.setDepState(rs.getString("dep_state"));
+                        order.setDepCity(rs.getString("dep_city"));
+                        return order;
+                    }
+                });
+
+        // Getting delivery info
+        jdbcTemplate.queryForObject(
+                "SELECT del_zip, del_state, del_city "
+                        + "FROM Delivery "
+                        + "WHERE del_id = ?", new Object[]{order.getDelID()},
+                new RowMapper<Order>() {
+                    @Override
+                    public Order mapRow(ResultSet rs, int rowNum) throws SQLException {
+                        order.setDelZip(rs.getString("del_zip"));
+                        order.setDelState(rs.getString("del_state"));
+                        order.setDelCity(rs.getString("del_city"));
+                        return order;
+                    }
+                });
+
+        // Getting items
+        int itemSize = order.getItemID().size();
+        for (int i = 0; i < itemSize; i++) {
+            jdbcTemplate.queryForObject(
+                    "SELECT item_weight, item_vol, item_haz, item_prod "
+                            + "FROM Items "
+                            + "WHERE item_id = ?", new Object[]{order.getItemID().get(i)},
+                    new RowMapper<Order>() {
+                        @Override
+                        public Order mapRow(ResultSet rs, int rowNum) throws SQLException {
+                            order.getItemWeight().add(rs.getDouble("item_weight"));
+                            order.getItemVol().add(rs.getDouble("item_vol"));
+                            order.getItemHazInt().add(rs.getInt("item_haz"));
+                            order.getItemProd().add(rs.getString("item_prod"));
+                            return order;
+                        }
+                    });
+        }
         return order;
     }
 }

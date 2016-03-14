@@ -1,14 +1,15 @@
 package com.odyssey.model;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Order implements Serializable {
+public class Order {
 
+    private int depID;
     private String depZip;
     private String depState;
     private String depCity;
 
+    private int delID;
     private String delZip;
     private String delState;
     private String delCity;
@@ -16,8 +17,17 @@ public class Order implements Serializable {
     private ArrayList<Integer> itemID = new ArrayList<>();
     private ArrayList<Double> itemWeight = new ArrayList<>();
     private ArrayList<Double> itemVol = new ArrayList<>();
-    private ArrayList<Boolean> itemHaz = new ArrayList<>();
+    private ArrayList<Boolean> itemHazBool = new ArrayList<>();
+    private ArrayList<Integer> itemHazInt = new ArrayList<>();
     private ArrayList<String> itemProd = new ArrayList<>();
+
+    public int getDepID() {
+        return depID;
+    }
+
+    public void setDepID(int depID) {
+        this.depID = depID;
+    }
 
     public String getDepZip() {
         return depZip;
@@ -41,6 +51,14 @@ public class Order implements Serializable {
 
     public void setDepCity(String depCity) {
         this.depCity = depCity;
+    }
+
+    public int getDelID() {
+        return delID;
+    }
+
+    public void setDelID(int delID) {
+        this.delID = delID;
     }
 
     public String getDelZip() {
@@ -79,8 +97,12 @@ public class Order implements Serializable {
         return itemVol;
     }
 
-    public ArrayList<Boolean> getItemHaz() {
-        return itemHaz;
+    public ArrayList<Boolean> getItemHazBool() {
+        return itemHazBool;
+    }
+
+    public ArrayList<Integer> getItemHazInt() {
+        return itemHazInt;
     }
 
     public ArrayList<String> getItemProd() {
