@@ -3,12 +3,10 @@ package com.odyssey.dao;
 import com.odyssey.model.Order;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 
 import javax.annotation.Resource;
 import javax.sql.DataSource;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
@@ -106,30 +104,25 @@ public class OrderDAOImpl implements OrderDAO {
     @Override
     public Order get(int orderID) {
         final Order order = new Order();
+        jdbcTemplate.setFetchSize(2000);
 
         // Getting item IDs
         jdbcTemplate.queryForObject(
                 "SELECT item_id FROM OrderItems WHERE order_id = ?", new Object[]{orderID},
-                new RowMapper<Order>() {
-                    @Override
-                    public Order mapRow(ResultSet rs, int rowNum) throws SQLException {
-                        do {
-                            order.getItemID().add(rs.getInt("item_id"));
-                        } while (rs.next());
-                        return order;
-                    }
+                (rs, rowNum) -> {
+                    do {
+                        order.getItemID().add(rs.getInt("item_id"));
+                    } while (rs.next());
+                    return order;
                 });
 
         // Getting dep/del IDs
         jdbcTemplate.queryForObject(
                 "SELECT dep_id, del_id FROM Orders WHERE order_id = ?", new Object[]{orderID},
-                new RowMapper<Order>() {
-                    @Override
-                    public Order mapRow(ResultSet rs, int rowNum) throws SQLException {
-                        order.setDepID(rs.getInt("dep_id"));
-                        order.setDelID(rs.getInt("del_id"));
-                        return order;
-                    }
+                (rs, rowNum) -> {
+                    order.setDepID(rs.getInt("dep_id"));
+                    order.setDelID(rs.getInt("del_id"));
+                    return order;
                 });
 
         // Getting departure info
@@ -137,14 +130,11 @@ public class OrderDAOImpl implements OrderDAO {
                 "SELECT dep_zip, dep_state, dep_city "
                         + "FROM Departure "
                         + "WHERE dep_id = ?", new Object[]{order.getDepID()},
-                new RowMapper<Order>() {
-                    @Override
-                    public Order mapRow(ResultSet rs, int rowNum) throws SQLException {
-                        order.setDepZip(rs.getString("dep_zip"));
-                        order.setDepState(rs.getString("dep_state"));
-                        order.setDepCity(rs.getString("dep_city"));
-                        return order;
-                    }
+                (rs, rowNum) -> {
+                    order.setDepZip(rs.getString("dep_zip"));
+                    order.setDepState(rs.getString("dep_state"));
+                    order.setDepCity(rs.getString("dep_city"));
+                    return order;
                 });
 
         // Getting delivery info
@@ -152,14 +142,11 @@ public class OrderDAOImpl implements OrderDAO {
                 "SELECT del_zip, del_state, del_city "
                         + "FROM Delivery "
                         + "WHERE del_id = ?", new Object[]{order.getDelID()},
-                new RowMapper<Order>() {
-                    @Override
-                    public Order mapRow(ResultSet rs, int rowNum) throws SQLException {
-                        order.setDelZip(rs.getString("del_zip"));
-                        order.setDelState(rs.getString("del_state"));
-                        order.setDelCity(rs.getString("del_city"));
-                        return order;
-                    }
+                (rs, rowNum) -> {
+                    order.setDelZip(rs.getString("del_zip"));
+                    order.setDelState(rs.getString("del_state"));
+                    order.setDelCity(rs.getString("del_city"));
+                    return order;
                 });
 
         // Getting items
@@ -169,15 +156,12 @@ public class OrderDAOImpl implements OrderDAO {
                     "SELECT item_weight, item_vol, item_haz, item_prod "
                             + "FROM Items "
                             + "WHERE item_id = ?", new Object[]{order.getItemID().get(i)},
-                    new RowMapper<Order>() {
-                        @Override
-                        public Order mapRow(ResultSet rs, int rowNum) throws SQLException {
-                            order.getItemWeight().add(rs.getDouble("item_weight"));
-                            order.getItemVol().add(rs.getDouble("item_vol"));
-                            order.getItemHazInt().add(rs.getInt("item_haz"));
-                            order.getItemProd().add(rs.getString("item_prod"));
-                            return order;
-                        }
+                    (rs, rowNum) -> {
+                        order.getItemWeight().add(rs.getDouble("item_weight"));
+                        order.getItemVol().add(rs.getDouble("item_vol"));
+                        order.getItemHazInt().add(rs.getInt("item_haz"));
+                        order.getItemProd().add(rs.getString("item_prod"));
+                        return order;
                     });
         }
         return order;

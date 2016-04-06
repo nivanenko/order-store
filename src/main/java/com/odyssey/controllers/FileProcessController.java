@@ -1,7 +1,8 @@
 package com.odyssey.controllers;
 
 import com.odyssey.service.OrderService;
-import com.odyssey.util.FileUploadListener;
+import com.odyssey.util.Util;
+import com.odyssey.util.file.MultiPartListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,18 +16,18 @@ import java.io.IOException;
 
 @Controller
 @RequestMapping("/upload")
-public class FileUploadController {
+public class FileProcessController {
     @Autowired
     private OrderService orderService;
 
     @RequestMapping(method = RequestMethod.POST)
-    public void uploadFile(HttpServletRequest req, HttpServletResponse resp) {
+    public void processFile(HttpServletRequest req, HttpServletResponse resp) {
         final AsyncContext context = req.startAsync(req, resp);
-
         context.start(() -> {
             try {
                 ServletInputStream input = req.getInputStream();
-                FileUploadListener listener = new FileUploadListener(input, context, resp, orderService);
+                String boundary = Util.extractBoundary(req.getHeader("Content-Type")); // get boundary
+                MultiPartListener listener = new MultiPartListener(input, context, resp, orderService, boundary);
                 input.setReadListener(listener);
             } catch (IOException e) {
                 System.out.println("IO error: " + e.getMessage());

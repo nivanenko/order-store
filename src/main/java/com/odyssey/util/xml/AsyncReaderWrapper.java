@@ -52,7 +52,7 @@ public class AsyncReaderWrapper {
                 System.out.println("Got EVENT_INCOMPLETE, could not feed more input");
             }
 
-            if (offset >= xmlBytes.length) { // end-of-input?
+             if (offset >= xmlBytes.length) { // end-of-input?
                 feeder.endOfInput();
             } else {
                 int amount = Math.min(bytesPerFeed, xmlBytes.length - offset);

@@ -3,9 +3,8 @@ package com.odyssey.service;
 import com.odyssey.dao.OrderDAO;
 import com.odyssey.model.Order;
 import com.odyssey.util.Converter;
-import com.odyssey.util.StringUtil;
+import com.odyssey.util.Util;
 import com.odyssey.util.json.JSONHelper;
-import com.odyssey.util.xml.XMLParser;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,12 +18,7 @@ public class OrderService {
     }
 
     @Transactional
-    public int addOrder(String xml) {
-        Order order = new Order();
-
-        XMLParser parser = new XMLParser(order, xml);
-        parser.parseString();
-
+    public int addOrder(Order order) {
         // Converting boolean type into the integer one for Oracle DB
         int itemSize = order.getItemHazBool().size();
         for (int i = 0; i < itemSize; i++) {
@@ -40,16 +34,16 @@ public class OrderService {
 
         // Deleting whitespaces
         for (int i = 0; i < itemSize; i++) {
-            order.getItemProd().set(i, StringUtil.deleteSpaces(order.getItemProd().get(i)));
+            order.getItemProd().set(i, Util.deleteSpaces(order.getItemProd().get(i)));
         }
-        order.setDepZip(StringUtil.deleteSpaces(order.getDepZip()));
-        order.setDepCity(StringUtil.deleteSpaces(order.getDepCity()));
-        order.setDepState(StringUtil.deleteSpaces(order.getDepState()));
-        order.setDelZip(StringUtil.deleteSpaces(order.getDelZip()));
-        order.setDelCity(StringUtil.deleteSpaces(order.getDepCity()));
-        order.setDelState(StringUtil.deleteSpaces(order.getDelState()));
+        order.setDepZip(Util.deleteSpaces(order.getDepZip()));
+        order.setDepCity(Util.deleteSpaces(order.getDepCity()));
+        order.setDepState(Util.deleteSpaces(order.getDepState()));
+        order.setDelZip(Util.deleteSpaces(order.getDelZip()));
+        order.setDelCity(Util.deleteSpaces(order.getDepCity()));
+        order.setDelState(Util.deleteSpaces(order.getDelState()));
 
-        // Converting hazard int value into boolean
+        // Converting hazard integer value into boolean one
         for (int i = 0; i < itemSize; i++) {
             order.getItemHazBool().add(i, Converter.intToBool(order.getItemHazInt().get(i)));
         }

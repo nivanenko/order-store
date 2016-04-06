@@ -13,6 +13,20 @@ import java.io.IOException;
 public class XMLParser {
     private Order order;
     private String xml;
+    private AsyncXMLInputFactory inputFactory;
+    private AsyncXMLStreamReader<AsyncByteArrayFeeder> reader;
+    private AsyncReaderWrapper wrapper;
+
+    public XMLParser(Order order) {
+        this.order = order;
+    }
+
+    public XMLParser(Order order, byte[] bytes) {
+        this.order = order;
+        inputFactory = new InputFactoryImpl();
+        reader = inputFactory.createAsyncForByteArray();
+        wrapper = new AsyncReaderWrapper(reader, 1, bytes);
+    }
 
     public XMLParser(Order order, String xml) {
         this.order = order;
@@ -31,10 +45,12 @@ public class XMLParser {
         }
     }
 
-    private void parseBytes(byte[] bytes) {
+    public void parseBytes(byte[] bytes) {
         AsyncXMLInputFactory inputFactory = new InputFactoryImpl();
         AsyncXMLStreamReader<AsyncByteArrayFeeder> reader = inputFactory.createAsyncForByteArray();
         AsyncReaderWrapper wrapper = new AsyncReaderWrapper(reader, 1, bytes);
+//        AsyncByteArrayFeeder feeder = reader.getInputFeeder();
+//        feeder.feedInput(bytes);
         try {
             int type = wrapper.nextToken();
             while (type != XMLStreamConstants.END_DOCUMENT) {
