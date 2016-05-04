@@ -4,29 +4,17 @@ import com.fasterxml.aalto.AsyncByteArrayFeeder;
 import com.fasterxml.aalto.AsyncXMLStreamReader;
 
 import javax.xml.stream.XMLStreamException;
-import java.io.IOException;
 
 public class AsyncReaderWrapper {
     private final AsyncXMLStreamReader<AsyncByteArrayFeeder> streamReader;
-    private final byte[] xmlBytes;
+
+    public void setXmlBytes(byte[] xmlBytes) {
+        this.xmlBytes = xmlBytes;
+    }
+
+    private byte[] xmlBytes;
     private final int bytesPerFeed;
     private int offset;
-
-    public AsyncReaderWrapper(AsyncXMLStreamReader<AsyncByteArrayFeeder> sr,
-                              String xmlString) {
-        this(sr, 1, xmlString);
-    }
-
-    public AsyncReaderWrapper(AsyncXMLStreamReader<AsyncByteArrayFeeder> sr,
-                              int bytesPerCall, String xmlString) {
-        streamReader = sr;
-        bytesPerFeed = bytesPerCall;
-        try {
-            xmlBytes = xmlString.getBytes("UTF-8");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     public AsyncReaderWrapper(AsyncXMLStreamReader<AsyncByteArrayFeeder> sr, int bytesPerCall,
                               byte[] bytes) {
@@ -35,12 +23,9 @@ public class AsyncReaderWrapper {
         bytesPerFeed = bytesPerCall;
     }
 
-    public String currentText() throws XMLStreamException {
-        return streamReader.getText();
-    }
-
-    public int currentToken() throws XMLStreamException {
-        return streamReader.getEventType();
+    public AsyncReaderWrapper(AsyncXMLStreamReader<AsyncByteArrayFeeder> sr, int bytesPerCall) {
+        streamReader = sr;
+        bytesPerFeed = bytesPerCall;
     }
 
     public int nextToken() throws XMLStreamException {
@@ -48,6 +33,7 @@ public class AsyncReaderWrapper {
 
         while ((token = streamReader.next()) == AsyncXMLStreamReader.EVENT_INCOMPLETE) {
             AsyncByteArrayFeeder feeder = streamReader.getInputFeeder();
+
             if (!feeder.needMoreInput()) {
                 System.out.println("Got EVENT_INCOMPLETE, could not feed more input");
             }

@@ -12,7 +12,7 @@ public class Util {
     }
 
     public static byte[] trimBytes(byte[] bytes) {
-        // Before body
+        // Before body=
         int len = bytes.length;
         int i = 0;
         while (bytes[i] == 0 && i++ < len) ;

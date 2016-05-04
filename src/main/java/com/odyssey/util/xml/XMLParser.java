@@ -13,28 +13,15 @@ import java.io.IOException;
 public class XMLParser {
     private Order order;
     private String xml;
-    private AsyncXMLInputFactory inputFactory;
     private AsyncXMLStreamReader<AsyncByteArrayFeeder> reader;
+    private AsyncXMLInputFactory inputFactory;
     private AsyncReaderWrapper wrapper;
 
     public XMLParser(Order order) {
         this.order = order;
-    }
-
-    public XMLParser(Order order, byte[] bytes) {
-        this.order = order;
         inputFactory = new InputFactoryImpl();
         reader = inputFactory.createAsyncForByteArray();
-        wrapper = new AsyncReaderWrapper(reader, 1, bytes);
-    }
-
-    public XMLParser(Order order, String xml) {
-        this.order = order;
-        this.xml = xml;
-    }
-
-    public XMLParser(String xml) {
-        this.xml = xml;
+        wrapper = new AsyncReaderWrapper(reader, 1);
     }
 
     public void parseString() {

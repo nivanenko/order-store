@@ -28,7 +28,7 @@ public class FileProcessController {
                 ServletInputStream input = req.getInputStream();
                 String boundary = Util.extractBoundary(req.getHeader("Content-Type")); // get boundary
                 MultiPartListener listener = new MultiPartListener(input, context, resp, orderService, boundary);
-                input.setReadListener(listener);
+                    input.setReadListener(listener);
             } catch (IOException e) {
                 System.out.println("IO error: " + e.getMessage());
                 e.printStackTrace();
