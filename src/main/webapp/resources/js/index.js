@@ -59,7 +59,7 @@ $(document).ready(function () {
         $(uploadResult).hide();
         $(fileInput).text('Choose the XML');
         if (!(response === 0) && !(response === -1)) {
-          $(errorUploadMsg).append('<p>Error: ' + response + '</p>');
+          $(errorUploadMsg).append('<p>' + response + '</p>');
         }
         $(errorUploadMsg).show();
       } else {

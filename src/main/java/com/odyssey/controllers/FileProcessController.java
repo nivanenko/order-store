@@ -2,7 +2,7 @@ package com.odyssey.controllers;
 
 import com.odyssey.service.OrderService;
 import com.odyssey.util.Util;
-import com.odyssey.util.file.MultiPartListener;
+import com.odyssey.util.file.MultiPart;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,9 +26,9 @@ public class FileProcessController {
         context.start(() -> {
             try {
                 ServletInputStream input = req.getInputStream();
-                String boundary = Util.extractBoundary(req.getHeader("Content-Type")); // get boundary
-                MultiPartListener listener = new MultiPartListener(input, context, resp, orderService, boundary);
-                    input.setReadListener(listener);
+                String boundary = Util.extractBoundary(req.getHeader("Content-Type"));
+                MultiPart listener = new MultiPart(input, context, resp, orderService, boundary);
+                input.setReadListener(listener);
             } catch (IOException e) {
                 System.out.println("IO error: " + e.getMessage());
                 e.printStackTrace();
