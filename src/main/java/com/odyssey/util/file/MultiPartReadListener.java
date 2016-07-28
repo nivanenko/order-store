@@ -9,11 +9,12 @@ import javax.servlet.AsyncContext;
 import javax.servlet.ReadListener;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletResponse;
+import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
 
-public class MultiPart implements ReadListener {
+public class MultiPartReadListener implements ReadListener {
     private enum State {
         BODY_START, BODY_WAIT, BODY_END
     }
@@ -24,6 +25,7 @@ public class MultiPart implements ReadListener {
     private OrderService orderService;
     private State state;
     private Order order;
+
     private XMLParser parser;
 
     private byte[] boundary;
@@ -31,13 +33,13 @@ public class MultiPart implements ReadListener {
     private byte[] body = new byte[BUFFER_SIZE];
     private byte[] incompletePart = new byte[1024];
 
-    public MultiPart(ServletInputStream in, AsyncContext ac, HttpServletResponse resp,
-                     OrderService orderService, String boundaryStr) {
+    public MultiPartReadListener(ServletInputStream in, AsyncContext ac, HttpServletResponse resp,
+                                 OrderService service, String boundary) {
         this.input = in;
         this.context = ac;
         this.resp = resp;
-        this.orderService = orderService;
-        boundary = boundaryStr.getBytes(Charset.forName("UTF-8"));
+        this.orderService = service;
+        this.boundary = boundary.getBytes(Charset.forName("UTF-8"));
         order = new Order();
         parser = new XMLParser(order);
         state = State.BODY_START;
@@ -55,6 +57,7 @@ public class MultiPart implements ReadListener {
                 switch (state) {
                     case BODY_START:
                         input.read(buffer);
+                        Util.writeToFile(buffer);
                         for (int i = 0; i < buffer.length; i++) {
                             // Look for the initial boundary
                             if (buffer[i] == boundary[0] &&
@@ -91,7 +94,7 @@ public class MultiPart implements ReadListener {
                         }
 
                         if (state == State.BODY_WAIT && !Util.equalElements(body)) {
-                            makeBodyValid();
+                            makeBodyCompleted();
                             body = Util.trimBytes(body);
                             parser.parseBytes(body);
                             break;
@@ -109,31 +112,15 @@ public class MultiPart implements ReadListener {
                                     buffer[i + 1] == boundary[1] &&
                                     buffer[i + boundary.length - 1] == boundary[boundary.length - 1]) {
                                 body[i] = 0; // deleting 1 redundant byte
-                                body = Util.trimBytes(body);
-                                // Copy the incomplete part into the beginning of the current body
-                                byte[] tempBody = new byte[incompletePart.length + body.length];
-                                System.arraycopy(incompletePart, 0, tempBody, 0, incompletePart.length);
-                                System.arraycopy(body, 0, tempBody, incompletePart.length, body.length);
-                                body = new byte[tempBody.length];
-                                System.arraycopy(tempBody, 0, body, 0, tempBody.length);
-
-                                addTagsToBody(true); // attach initial tags
-                                body = Util.trimBytes(body);
+                                addIncompletePart();
                                 parser.parseBytes(body);
                                 setState(State.BODY_END);
                                 break;
                             } else if (i == buffer.length - 1 && state == State.BODY_WAIT) {
-                                body = Util.trimBytes(body);
-                                // Copy incomplete part into the beginning of the current body
-                                byte[] tempBody = new byte[incompletePart.length + body.length];
-                                System.arraycopy(incompletePart, 0, tempBody, 0, incompletePart.length);
-                                System.arraycopy(body, 0, tempBody, incompletePart.length, body.length);
-                                body = new byte[tempBody.length];
-                                System.arraycopy(tempBody, 0, body, 0, tempBody.length);
-
-                                makeBodyValid();
+                                addIncompletePart();
+                                makeBodyCompleted();
                                 addTagsToBody(true); // attach initial tags
-                                body = Util.trimBytes(body);
+//                                body = Util.trimBytes(body);
                                 parser.parseBytes(body);
                                 break;
                             }
@@ -145,12 +132,17 @@ public class MultiPart implements ReadListener {
             } while (input.isReady() && !input.isFinished());
         } catch (IllegalStateException | IOException e) {
             e.printStackTrace();
+        } catch (XMLStreamException e) {
+            System.err.println("XML parsing error: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
     @Override
     public void onAllDataRead() {
-        if (!order.getItemVol().isEmpty()) {
+        if (!order.getItemVol().isEmpty() &&
+                order.getDepZip() != null &&
+                order.getDelZip() != null) {
             int orderID = orderService.addOrder(order);
 
             try (PrintWriter out = resp.getWriter()) {
@@ -180,7 +172,7 @@ public class MultiPart implements ReadListener {
      * we cut out the incomplete part into a temporary byte array
      * and then place it into the beginning of the next byte chunk
      */
-    private void makeBodyValid() {
+    private void makeBodyCompleted() {
         if (body[body.length - 1] != 62 &&
                 body[body.length - 1] != 10 &&
                 body[body.length - 1] != 13) {
@@ -231,5 +223,18 @@ public class MultiPart implements ReadListener {
             body = new byte[newBody.length];
             System.arraycopy(newBody, 0, body, 0, newBody.length);
         }
+    }
+
+    private void addIncompletePart() {
+        body = Util.trimBytes(body);
+        // Copy the incomplete part into the beginning of the current body
+        byte[] tempBody = new byte[incompletePart.length + body.length];
+        System.arraycopy(incompletePart, 0, tempBody, 0, incompletePart.length);
+        System.arraycopy(body, 0, tempBody, incompletePart.length, body.length);
+        body = new byte[tempBody.length];
+        System.arraycopy(tempBody, 0, body, 0, tempBody.length);
+
+        addTagsToBody(true); // attach initial tags
+        body = Util.trimBytes(body);
     }
 }

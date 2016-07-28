@@ -15,8 +15,12 @@ import java.io.PrintWriter;
 @Controller
 @RequestMapping("/lookup")
 public class LookupController {
+    private final OrderService orderService;
+
     @Autowired
-    private OrderService orderService;
+    public LookupController(OrderService orderService) {
+        this.orderService = orderService;
+    }
 
     @RequestMapping(method = RequestMethod.GET)
     public void lookup(@RequestParam("value") String orderID, HttpServletResponse resp) {

@@ -1,10 +1,10 @@
 package com.odyssey.dao;
 
 import com.odyssey.model.Order;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import javax.annotation.Resource;
 import javax.sql.DataSource;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -14,7 +14,7 @@ public class OrderDAOImpl implements OrderDAO {
 
     private JdbcTemplate jdbcTemplate;
 
-    @Resource(name = "dataSource")
+    @Autowired
     public void setDataSource(DataSource dataSource) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
     }

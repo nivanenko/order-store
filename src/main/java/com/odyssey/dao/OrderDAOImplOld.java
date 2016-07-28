@@ -1,8 +1,8 @@
 package com.odyssey.dao;
 
 import com.odyssey.model.Order;
+import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.annotation.Resource;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -14,7 +14,7 @@ public class OrderDAOImplOld implements OrderDAO {
 
     private DataSource ds;
 
-    @Resource(name = "dataSource")
+    @Autowired
     public void setDataSource(DataSource ds) {
         this.ds = ds;
     }

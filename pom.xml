@@ -4,15 +4,16 @@
     <groupId>com.odyssey.orderstore</groupId>
     <artifactId>order-store</artifactId>
     <packaging>war</packaging>
-    <version>0.0.2-SNAPSHOT</version>
+    <version>0.0.3-SNAPSHOT</version>
     <name>Order Store</name>
 
     <properties>
         <java-version>1.8</java-version>
-        <spring.version>4.2.6.RELEASE</spring.version>
+        <spring.version>4.3.1.RELEASE</spring.version>
         <json.version>20160212</json.version>
         <fasterxml.version>1.0.0</fasterxml.version>
-        <hikaricp.version>2.4.3</hikaricp.version>
+        <hikaricp.version>2.4.7</hikaricp.version>
+        <testng.version>6.9.10</testng.version>
     </properties>
 
     <dependencies>
@@ -43,6 +44,21 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-jdbc</artifactId>
             <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-web</artifactId>
+            <version>4.1.1.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-config</artifactId>
+            <version>4.1.1.RELEASE</version>
         </dependency>
 
         <!-- JSON -->
@@ -108,7 +124,7 @@
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
-            <version>6.9.10</version>
+            <version>${testng.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

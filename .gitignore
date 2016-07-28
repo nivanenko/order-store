@@ -5,3 +5,6 @@
 .idea/
 log/
 target/
+test.xml
+3.xml
+src/test/

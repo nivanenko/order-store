@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<order>
+    <from zip="32222" state="DB" city="Zalupinks"/>
+    <to zip="34564" state="BB" city="Hernata"/>
+    <lines>	
+        <line weight="9685" volume="3232" hazard="true" product="pussyl"/>
+        <line weight="2000.67" volume="3662" hazard="false" product="iphone"/>
+    </lines>
+    <instructions>here be dragons</instructions>
+</order> 

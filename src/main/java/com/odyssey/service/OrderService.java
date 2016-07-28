@@ -19,7 +19,7 @@ public class OrderService {
 
     @Transactional
     public int addOrder(Order order) {
-        // Converting boolean type into the integer one for Oracle DB
+        // converting "hazard" boolean type into the integer one for Oracle DB
         int itemSize = order.getItemHazBool().size();
         for (int i = 0; i < itemSize; i++) {
             order.getItemHazInt().add(i, Converter.boolToInt(order.getItemHazBool().get(i)));
@@ -31,20 +31,9 @@ public class OrderService {
     public JSONObject getOrder(int orderID) {
         Order order = dao.get(orderID);
         int itemSize = order.getItemID().size();
+        order = Util.deleteSpaces(order); // deleting whitespaces
 
-        // Deleting whitespaces
-        for (int i = 0; i < itemSize; i++) {
-            order.getItemProd().set(i, Util.deleteSpaces(order.getItemProd().get(i)));
-        }
-        order.setDepZip(Util.deleteSpaces(order.getDepZip()));
-        order.setDepCity(Util.deleteSpaces(order.getDepCity()));
-        order.setDepState(Util.deleteSpaces(order.getDepState()));
-        order.setDelZip(Util.deleteSpaces(order.getDelZip()));
-        order.setDelCity(Util.deleteSpaces(order.getDepCity()));
-        order.setDelState(Util.deleteSpaces(order.getDelState()));
-
-        // Converting hazard integer value into boolean one
-        for (int i = 0; i < itemSize; i++) {
+        for (int i = 0; i < itemSize; i++) { // converting "hazard" integer value into the boolean one
             order.getItemHazBool().add(i, Converter.intToBool(order.getItemHazInt().get(i)));
         }
 

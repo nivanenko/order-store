@@ -55,10 +55,10 @@ $(document).ready(function () {
   $('input[type="file"]').ajaxfileupload({
     'action': '/upload',
     'onComplete': function (response) {
-      if (isNaN(response) || response === 0 || response === -1) {
+      if (isNaN(response) || response === 0 || response === -1 || response === null) {
         $(uploadResult).hide();
         $(fileInput).text('Choose the XML');
-        if (!(response === 0) && !(response === -1)) {
+        if (!(response === 0) || !(response === -1) || isNaN(response) || response === null) {
           $(errorUploadMsg).append('<p>' + response + '</p>');
         }
         $(errorUploadMsg).show();
@@ -100,7 +100,6 @@ $(document).ready(function () {
           var json = JSON.stringify(response);
           $(lookupResult).JSONView(json).show();
           $(lookupSubmit).text('Lookup');
-        //}
       },
       error: function () {
         $(lookupResult).hide();

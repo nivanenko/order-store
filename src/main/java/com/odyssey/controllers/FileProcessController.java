@@ -2,7 +2,7 @@ package com.odyssey.controllers;
 
 import com.odyssey.service.OrderService;
 import com.odyssey.util.Util;
-import com.odyssey.util.file.MultiPart;
+import com.odyssey.util.file.MultiPartReadListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,8 +17,12 @@ import java.io.IOException;
 @Controller
 @RequestMapping("/upload")
 public class FileProcessController {
+    private final OrderService orderService;
+
     @Autowired
-    private OrderService orderService;
+    public FileProcessController(OrderService orderService) {
+        this.orderService = orderService;
+    }
 
     @RequestMapping(method = RequestMethod.POST)
     public void processFile(HttpServletRequest req, HttpServletResponse resp) {
@@ -27,8 +31,8 @@ public class FileProcessController {
             try {
                 ServletInputStream input = req.getInputStream();
                 String boundary = Util.extractBoundary(req.getHeader("Content-Type"));
-                MultiPart listener = new MultiPart(input, context, resp, orderService, boundary);
-                input.setReadListener(listener);
+                MultiPartReadListener multiPart = new MultiPartReadListener(input, context, resp, orderService, boundary);
+                input.setReadListener(multiPart);
             } catch (IOException e) {
                 System.out.println("IO error: " + e.getMessage());
                 e.printStackTrace();
