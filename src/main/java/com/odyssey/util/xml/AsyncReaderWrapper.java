@@ -19,11 +19,6 @@ class AsyncReaderWrapper {
         bytesPerFeed = bytesPerCall;
     }
 
-    public AsyncReaderWrapper(AsyncXMLStreamReader<AsyncByteArrayFeeder> sr, int bytesPerCall) {
-        streamReader = sr;
-        bytesPerFeed = bytesPerCall;
-    }
-
     int nextToken() throws XMLStreamException {
         int token;
 
@@ -31,7 +26,7 @@ class AsyncReaderWrapper {
             AsyncByteArrayFeeder feeder = streamReader.getInputFeeder();
 
             if (!feeder.needMoreInput()) {
-                break;
+                throw new XMLStreamException("Need more input, error!");
             }
 
              if (offset >= xmlBytes.length) { // end-of-input?

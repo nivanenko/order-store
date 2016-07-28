@@ -31,7 +31,7 @@ public class MultiPartReadListener implements ReadListener {
     private byte[] boundary;
     private int BUFFER_SIZE = 1024 * 1024;
     private byte[] body = new byte[BUFFER_SIZE];
-    private byte[] incompletePart = new byte[1024];
+    private byte[] incomplete = new byte[1024];
 
     public MultiPartReadListener(ServletInputStream in, AsyncContext ac, HttpServletResponse resp,
                                  OrderService service, String boundary) {
@@ -94,7 +94,7 @@ public class MultiPartReadListener implements ReadListener {
                         }
 
                         if (state == State.BODY_WAIT && !Util.equalElements(body)) {
-                            makeBodyCompleted();
+                            deletePartAfter();
                             body = Util.trimBytes(body);
                             parser.parseBytes(body);
                             break;
@@ -112,15 +112,13 @@ public class MultiPartReadListener implements ReadListener {
                                     buffer[i + 1] == boundary[1] &&
                                     buffer[i + boundary.length - 1] == boundary[boundary.length - 1]) {
                                 body[i] = 0; // deleting 1 redundant byte
-                                addIncompletePart();
+                                addPartBefore();
                                 parser.parseBytes(body);
                                 setState(State.BODY_END);
                                 break;
                             } else if (i == buffer.length - 1 && state == State.BODY_WAIT) {
-                                addIncompletePart();
-                                makeBodyCompleted();
-                                addTagsToBody(true); // attach initial tags
-//                                body = Util.trimBytes(body);
+                                addPartBefore();
+                                deletePartAfter();
                                 parser.parseBytes(body);
                                 break;
                             }
@@ -170,24 +168,24 @@ public class MultiPartReadListener implements ReadListener {
     /**
      * if the body doesn't end with the closing tag ">" (byte #62),
      * we cut out the incomplete part into a temporary byte array
-     * and then place it into the beginning of the next byte chunk
+     * and then place it into the beginning of the next byte chunk.
      */
-    private void makeBodyCompleted() {
+    private void deletePartAfter() {
         if (body[body.length - 1] != 62 &&
                 body[body.length - 1] != 10 &&
                 body[body.length - 1] != 13) {
-            incompletePart = new byte[body.length];
+            incomplete = new byte[body.length];
             body = Util.trimBytes(body);
 
             for (int i = body.length - 1; i >= 0; i--) {
                 if (body[i] == 62 && body[i - 1] == 47) {
-                    // Copy the incomplete part from the body into incompletePart
-                    System.arraycopy(body, ++i, incompletePart, 0, body.length - i);
-                    incompletePart = Util.trimBytes(incompletePart);
+                    // Copy the incomplete part from the body into incomplete
+                    System.arraycopy(body, ++i, incomplete, 0, body.length - i);
+                    incomplete = Util.trimBytes(incomplete);
 
                     // Then save the complete part of the body
-                    byte[] completePart = new byte[body.length - incompletePart.length];
-                    System.arraycopy(body, 0, completePart, 0, body.length - incompletePart.length);
+                    byte[] completePart = new byte[body.length - incomplete.length];
+                    System.arraycopy(body, 0, completePart, 0, body.length - incomplete.length);
 
                     completePart = Util.trimBytes(completePart);
                     body = new byte[completePart.length];
@@ -225,12 +223,16 @@ public class MultiPartReadListener implements ReadListener {
         }
     }
 
-    private void addIncompletePart() {
+    /**
+     * Adding <code>incomplete</code> before <code>body</code>
+     * and initial tags as well.
+     */
+    private void addPartBefore() {
         body = Util.trimBytes(body);
         // Copy the incomplete part into the beginning of the current body
-        byte[] tempBody = new byte[incompletePart.length + body.length];
-        System.arraycopy(incompletePart, 0, tempBody, 0, incompletePart.length);
-        System.arraycopy(body, 0, tempBody, incompletePart.length, body.length);
+        byte[] tempBody = new byte[incomplete.length + body.length];
+        System.arraycopy(incomplete, 0, tempBody, 0, incomplete.length);
+        System.arraycopy(body, 0, tempBody, incomplete.length, body.length);
         body = new byte[tempBody.length];
         System.arraycopy(tempBody, 0, body, 0, tempBody.length);
 
