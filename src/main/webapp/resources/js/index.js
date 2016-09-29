@@ -59,7 +59,7 @@ $(document).ready(function () {
         $(uploadResult).hide();
         $(fileInput).text('Choose the XML');
         if (!(response === 0) || !(response === -1) || isNaN(response) || response === null) {
-          $(errorUploadMsg).append('<p>' + response + '</p>');
+          $(errorUploadMsg).html('<p>' + response + '<br>Please try again!</p>');
         }
         $(errorUploadMsg).show();
       } else {
@@ -93,18 +93,19 @@ $(document).ready(function () {
       dataType: "json",
       encode: true,
       success: function (response) {
-          $(errorLookupMsg).hide();
+        $(errorLookupMsg).hide();
 
-          $(lookupID).html('<p>Order for ID: <span style=\'color: green; font-weight: bold\'>' + data
-            + '</span></p>').show();
-          var json = JSON.stringify(response);
-          $(lookupResult).JSONView(json).show();
-          $(lookupSubmit).text('Lookup');
+        $(lookupID).html('<p>Order for ID: <span style=\'color: green; font-weight: bold\'>' + data
+          + '</span></p>').show();
+        var json = JSON.stringify(response);
+        $(lookupResult).JSONView(json).show();
+        $(lookupSubmit).text('Lookup');
       },
       error: function () {
         $(lookupResult).hide();
         $(lookupID).hide();
         $(errorLookupMsg).show();
+        $(errorLookupMsg).html('<p>Error! There\'s no order with such ID!</p>');
         $(lookupSubmit).text('Lookup');
       }
     });

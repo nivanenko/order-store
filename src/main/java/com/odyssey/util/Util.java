@@ -2,10 +2,6 @@ package com.odyssey.util;
 
 import com.odyssey.model.Order;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.regex.Pattern;
 
 public class Util {
@@ -20,11 +16,11 @@ public class Util {
     }
 
     /**
-     * Delete all spaces in Order's strings: DepZip, DepCity, DepState,
+     * Deletes all spaces in Order's strings: DepZip, DepCity, DepState,
      * DelZip, DelCity and DepState.
      *
      * @param order w/ spaces
-     * @return the order w/o spaces
+     * @return order w/o spaces
      */
     public static Order deleteSpaces(Order order) {
         int itemSize = order.getItemID().size();
@@ -64,7 +60,7 @@ public class Util {
 
     /**
      * This method deletes zero (0) bytes in the beginning and in the end
-     * of the byte array and return byte array with its right size.
+     * of the byte array and return byte array with its actual size.
      *
      * @param bytes with w/ zeroes
      * @return bytes[] w/o zeroes
@@ -87,31 +83,15 @@ public class Util {
     }
 
     /**
-     * The method extracts boundary from the header string and returns it.
+     * The method extracts the boundary from the header's string and returns it.
      *
      * @param str header w/ boundary inside
-     * @return only boundary string
+     * @return boundary string
      */
     public static String extractBoundary(String str) {
         int i = str.lastIndexOf("boundary=");
         String boundary = str.substring(i + 9);
         boundary = "--" + boundary;
         return boundary;
-    }
-
-
-    /**
-     * The helper method which write given byte array into the file out.txt
-     * in the root folder of the project directory.
-     *
-     * @param bytes bytes to be written
-     */
-    public static void writeToFile(byte[] bytes) {
-        try {
-            Path path = Paths.get("C:\\Users\\Nazar\\IdeaProjects\\order-store\\out.txt");
-            Files.write(path, bytes);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 }

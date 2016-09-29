@@ -1,99 +1,119 @@
-package com.odyssey.util.file;
+package com.odyssey.service;
 
 import com.odyssey.model.Order;
-import com.odyssey.service.OrderService;
 import com.odyssey.util.Util;
 import com.odyssey.util.xml.XMLParser;
+import org.springframework.web.context.request.async.DeferredResult;
 
-import javax.servlet.AsyncContext;
 import javax.servlet.ReadListener;
 import javax.servlet.ServletInputStream;
-import javax.servlet.http.HttpServletResponse;
-import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.charset.Charset;
 
-public class MultiPartReadListener implements ReadListener {
-    private enum State {
-        BODY_START, BODY_WAIT, BODY_END
+public class MultipartReadListener implements ReadListener {
+    enum State { // FSM
+        BODY_START, BODY_PROCESS, BODY_END
     }
 
-    private ServletInputStream input;
-    private AsyncContext context;
-    private HttpServletResponse resp;
-    private OrderService orderService;
-    private State state;
-    private Order order;
+    public static final int BUFFER_SIZE = 1024 * 1024;
 
-    private XMLParser parser;
+    /**
+     * The (/, >) character in bytes
+     */
+    public static final byte[] TAG_CLOSE = {0x2F, 0x3E};
 
+    /**
+     * The (<, ?) characters in bytes
+     */
+    public static final byte[] XML_BEGIN = {0x3C, 0x3F};
+
+    /**
+     * The (\r) character in bytes
+     */
+    public static final byte CR = 0x0D;
+
+    /**
+     * The (\n) character in bytes
+     */
+    public static final byte LF = 0x0A;
+
+    private final ServletInputStream input;
+    private final OrderService orderService;
+    private final Order order;
+    private final XMLParser parser;
+    private final DeferredResult<String> deferredResult;
+
+    private State currentState;
     private byte[] boundary;
-    private int BUFFER_SIZE = 1024 * 1024;
-    private byte[] body = new byte[BUFFER_SIZE];
-    private byte[] incomplete = new byte[1024];
+    private byte[] body;
+    private byte[] incomplete;
 
-    public MultiPartReadListener(ServletInputStream in, AsyncContext ac, HttpServletResponse resp,
-                                 OrderService service, String boundary) {
-        this.input = in;
-        this.context = ac;
-        this.resp = resp;
-        this.orderService = service;
+
+    public MultipartReadListener(ServletInputStream input,
+                                 OrderService service, DeferredResult<String> deferredResult, String boundary) {
+        this.input = input;
         this.boundary = boundary.getBytes(Charset.forName("UTF-8"));
+        this.orderService = service;
+        this.deferredResult = deferredResult;
+
+        body = new byte[BUFFER_SIZE];
+        incomplete = new byte[1024];
         order = new Order();
         parser = new XMLParser(order);
-        state = State.BODY_START;
+        currentState = State.BODY_START;
     }
 
-    private void setState(State state) {
-        this.state = state;
+    private void setState(State nextState) {
+        currentState = nextState;
     }
 
     @Override
-    public void onDataAvailable() {
+    public void onDataAvailable() throws IOException {
         byte[] buffer = new byte[BUFFER_SIZE];
         try {
             do {
-                switch (state) {
+                switch (currentState) {
                     case BODY_START:
                         input.read(buffer);
-                        Util.writeToFile(buffer);
                         for (int i = 0; i < buffer.length; i++) {
-                            // Look for the initial boundary
+                            // Search for the initial boundary
                             if (buffer[i] == boundary[0] &&
                                     buffer[i + 1] == boundary[1] &&
                                     buffer[i + boundary.length - 1] == boundary[boundary.length - 1]) {
                                 for (int j = i; j < buffer.length; j++) {
-                                    // Got boundary. Look for the XML declaration (<? characters)
-                                    if (buffer[j] == 60 && buffer[j + 1] == 63) {
+                                    // Reached boundary. Search for the XML declaration's start
+                                    if (buffer[j] == XML_BEGIN[0] && buffer[j + 1] == XML_BEGIN[1]) {
                                         for (int k = j; k < buffer.length; k++) {
-                                            // Copy data into the byte array until the boundary is found
-                                            body[k] = buffer[k];
+                                            body[k] = buffer[k];  // copying until the boundary's found
                                             if (buffer[k] == boundary[0] &&
                                                     buffer[k + 1] == boundary[1] &&
                                                     buffer[k + boundary.length - 1] == boundary[boundary.length - 1]) {
-                                                body[k] = 0; // delete 1 redundant byte
+                                                body[k] = 0;
                                                 body = Util.trimBytes(body);
                                                 parser.parseBytes(body);
                                                 setState(State.BODY_END);
                                                 break;
                                             } else if (k == buffer.length - 1) { // if there's no final boundary
-                                                setState(State.BODY_WAIT);
+                                                setState(State.BODY_PROCESS);
                                                 break;
                                             }
                                         }
-                                    } else if (j == buffer.length - 1) { // if the file is empty
-                                        break;
-                                    } else if (state != State.BODY_START) {
+                                    } else if ((j == buffer.length - 1) && currentState == State.BODY_PROCESS) {
+                                        throw new IOException("The file is empty!");
+                                    } else if (currentState != State.BODY_START) {
                                         break;
                                     }
                                 }
-                            } else if (i == buffer.length - 1 || state != State.BODY_START) { // if there's no initial boundary
+                            } else if (i == buffer.length - 1 || currentState != State.BODY_START) { // if there's no initial boundary
                                 break;                                                        // or we've finished with the first part
                             }
                         }
 
-                        if (state == State.BODY_WAIT && !Util.equalElements(body)) {
+                        /* Whether the XML body doesn't end with the closing tag ">",
+                           we cut out the incomplete part into a byte array and then
+                           place it into the beginning of the next byte chunk in BODY_PROCESS state.*/
+
+                        if (currentState == State.BODY_PROCESS && !Util.equalElements(body)) {
                             deletePartAfter();
                             body = Util.trimBytes(body);
                             parser.parseBytes(body);
@@ -102,21 +122,21 @@ public class MultiPartReadListener implements ReadListener {
                             throw new IOException("The file is empty!");
                         }
                         break;
-                    case BODY_WAIT:
+                    case BODY_PROCESS:
                         input.read(buffer);
                         body = new byte[buffer.length];
                         for (int i = 0; i < buffer.length; i++) {
                             body[i] = buffer[i];
-                            // Look for the final boundary
+                            // Search for the final boundary
                             if (buffer[i] == boundary[0] &&
                                     buffer[i + 1] == boundary[1] &&
                                     buffer[i + boundary.length - 1] == boundary[boundary.length - 1]) {
-                                body[i] = 0; // deleting 1 redundant byte
+                                body[i] = 0;
                                 addPartBefore();
                                 parser.parseBytes(body);
                                 setState(State.BODY_END);
                                 break;
-                            } else if (i == buffer.length - 1 && state == State.BODY_WAIT) {
+                            } else if (i == buffer.length - 1 && currentState == State.BODY_PROCESS) {
                                 addPartBefore();
                                 deletePartAfter();
                                 parser.parseBytes(body);
@@ -124,15 +144,14 @@ public class MultiPartReadListener implements ReadListener {
                             }
                         }
                         break;
+                    case BODY_END:
+                        break;
                     default:
                         break;
                 }
             } while (input.isReady() && !input.isFinished());
-        } catch (IllegalStateException | IOException e) {
-            e.printStackTrace();
-        } catch (XMLStreamException e) {
-            System.err.println("XML parsing error: " + e.getMessage());
-            e.printStackTrace();
+        } catch (Exception e) {
+            deferredResult.setErrorResult(e);
         }
     }
 
@@ -141,44 +160,29 @@ public class MultiPartReadListener implements ReadListener {
         if (!order.getItemVol().isEmpty() &&
                 order.getDepZip() != null &&
                 order.getDelZip() != null) {
-            int orderID = orderService.addOrder(order);
-
-            try (PrintWriter out = resp.getWriter()) {
-                out.print(orderID);
-            } catch (IOException e) {
-                System.err.println("PrintWriter error: " + e.getMessage());
-                e.printStackTrace();
-            }
-            context.complete();
+            deferredResult.setResult(String.valueOf(orderService.addOrder(order)));
         }
     }
 
     @Override
     public void onError(Throwable t) {
-        t.printStackTrace();
-        try (PrintWriter out = resp.getWriter()) {
-            out.print(t.getMessage());
-        } catch (IOException e) {
-            System.err.println("PrintWriter error: " + e.getMessage());
-            e.printStackTrace();
-        }
-        context.complete();
+        deferredResult.setErrorResult(t);
     }
 
     /**
-     * if the body doesn't end with the closing tag ">" (byte #62),
-     * we cut out the incomplete part into a temporary byte array
-     * and then place it into the beginning of the next byte chunk.
+     * Deletes the incomplete part of the XML body and save it
+     * into <code>byte[] incomplete</code>. Then the <code>body</code>
+     * array attached with closing tags to make body completed for the XML parser.
      */
     private void deletePartAfter() {
-        if (body[body.length - 1] != 62 &&
-                body[body.length - 1] != 10 &&
-                body[body.length - 1] != 13) {
+        if (body[body.length - 1] != TAG_CLOSE[1] &&
+                body[body.length - 1] != CR &&
+                body[body.length - 1] != LF) {
             incomplete = new byte[body.length];
             body = Util.trimBytes(body);
 
             for (int i = body.length - 1; i >= 0; i--) {
-                if (body[i] == 62 && body[i - 1] == 47) {
+                if (body[i - 1] == TAG_CLOSE[0] && body[i] == TAG_CLOSE[1]) {
                     // Copy the incomplete part from the body into incomplete
                     System.arraycopy(body, ++i, incomplete, 0, body.length - i);
                     incomplete = Util.trimBytes(incomplete);
@@ -225,7 +229,7 @@ public class MultiPartReadListener implements ReadListener {
 
     /**
      * Adding <code>incomplete</code> before <code>body</code>
-     * and initial tags as well.
+     * and adding initial tags as well.
      */
     private void addPartBefore() {
         body = Util.trimBytes(body);

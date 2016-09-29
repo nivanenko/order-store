@@ -4,9 +4,9 @@
 <head>
     <meta http-equiv="content-type" content="text/html" charset="UTF-8">
     <title>Order Store</title>
-    <link href="<c:url value="/resources/css/style.css" />" rel="stylesheet"  type="text/css" />
-    <link href="<c:url value="/resources/css/jquery.jsonview.css" />" rel="stylesheet"  type="text/css" />
-    <link href="<c:url value="/resources/css/button.css" />" rel="stylesheet"  type="text/css" />
+    <link href="<c:url value="/resources/css/style.css" />" rel="stylesheet" type="text/css"/>
+    <link href="<c:url value="/resources/css/jquery.jsonview.css" />" rel="stylesheet" type="text/css"/>
+    <link href="<c:url value="/resources/css/button.css" />" rel="stylesheet" type="text/css"/>
     <script type="text/javascript" src="<c:url value="/resources/js/jquery-2.1.4.js" />"></script>
     <script type="text/javascript" src="<c:url value="/resources/js/ajaxfileupload.js" />"></script>
     <script type="text/javascript" src="<c:url value="/resources/js/jquery.jsonview.js" />"></script>
@@ -84,11 +84,8 @@
     </div>
 
     <div class="errors">
-        <div id="errorUploadMsg" style="display: none;"><p>An error
-            occurred while the file being uploaded!</p></div>
-        <div id="errorLookupMsg" style="display: none;">
-            <p>Error! There's no order with such ID!</p>
-        </div>
+        <div id="errorUploadMsg" style="display: none;"></div>
+        <div id="errorLookupMsg" style="display: none;"></div>
     </div>
 </div>
 </body>

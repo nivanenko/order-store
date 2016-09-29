@@ -14,7 +14,7 @@
 
     <context:annotation-config/>
 
-    <!-- Database properties -->
+    <!-- Database properties location -->
     <context:property-placeholder location="/resources/db.properties"/>
 
     <bean id="hihariConfig" class="com.zaxxer.hikari.HikariConfig"
@@ -36,9 +36,6 @@
     <tx:annotation-driven transaction-manager="txManager"/>
 
     <bean name="orderDAO" class="com.odyssey.dao.OrderDAOImpl"
-          p:dataSource-ref="dataSource"/>
-
-    <bean name="orderDAOOld" class="com.odyssey.dao.OrderDAOImplOld"
           p:dataSource-ref="dataSource"/>
 
     <bean name="orderService" class="com.odyssey.service.OrderService"
