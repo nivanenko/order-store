@@ -4,18 +4,26 @@
     <groupId>com.odyssey.orderstore</groupId>
     <artifactId>order-store</artifactId>
     <packaging>war</packaging>
-    <version>0.0.3-SNAPSHOT</version>
+    <version>0.0.4-SNAPSHOT</version>
     <name>Order Store</name>
 
     <properties>
         <java-version>1.8</java-version>
-        <spring.version>4.3.3.RELEASE</spring.version>
-        <spring-security.version>4.1.3.RELEASE</spring-security.version>
+        <spring.version>4.3.4.RELEASE</spring.version>
+        <spring-security.version>4.2.0.RELEASE</spring-security.version>
         <json.version>20160810</json.version>
         <fasterxml.version>1.0.0</fasterxml.version>
         <hikaricp.version>2.5.1</hikaricp.version>
-        <testng.version>6.9.10</testng.version>
+        <junit.version>4.12</junit.version>
+        <easymock.version>3.4</easymock.version>
     </properties>
+
+    <repositories>
+        <repository>
+            <id>spring-test</id>
+            <url>http://repo.springsource.org/libs-snapshot</url>
+        </repository>
+    </repositories>
 
     <dependencies>
         <!-- Spring Framework -->
@@ -24,7 +32,6 @@
             <artifactId>spring-context</artifactId>
             <version>${spring.version}</version>
             <exclusions>
-                <!-- Exclude Commons Logging in favor of SLF4j -->
                 <exclusion>
                     <groupId>commons-logging</groupId>
                     <artifactId>commons-logging</artifactId>
@@ -113,25 +120,17 @@
             </exclusions>
         </dependency>
 
-        <!-- Logging -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>1.7.13</version>
-            <scope>compile</scope>
-        </dependency>
-
         <!-- Testing -->
         <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <version>${testng.version}</version>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.easymock</groupId>
             <artifactId>easymock</artifactId>
-            <version>3.4</version>
+            <version>${easymock.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -184,6 +183,17 @@
                 <groupId>org.apache.tomcat.maven</groupId>
                 <artifactId>tomcat7-maven-plugin</artifactId>
                 <version>2.2</version>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.19</version>
+                <configuration>
+                    <forkCount>3</forkCount>
+                    <reuseForks>true</reuseForks>
+                    <argLine>-Xmx1024m</argLine>
+                </configuration>
             </plugin>
         </plugins>
     </build>

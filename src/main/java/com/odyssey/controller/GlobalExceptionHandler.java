@@ -1,5 +1,6 @@
 package com.odyssey.controller;
 
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -22,5 +23,12 @@ public class GlobalExceptionHandler {
     String handleIOExceptions(HttpServletResponse response) {
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
         return "The file is invalid!";
+    }
+
+    @ExceptionHandler(EmptyResultDataAccessException.class)
+    @ResponseBody
+    String handleDBException(HttpServletResponse response) {
+        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        return "Error! There\\'s no order with such ID!";
     }
 }

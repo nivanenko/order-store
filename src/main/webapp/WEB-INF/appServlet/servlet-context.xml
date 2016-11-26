@@ -13,7 +13,7 @@
 
     <!-- Enable annotations support and set DeferredResultInterceptor for FileUpload controller-->
     <mvc:annotation-driven>
-        <mvc:async-support default-timeout="2500">
+        <mvc:async-support default-timeout="250">
             <mvc:deferred-result-interceptors>
                 <bean name="deferredInterceptor" class="com.odyssey.service.DeferredResultInterceptor"
                       c:orderService-ref="orderService"/>

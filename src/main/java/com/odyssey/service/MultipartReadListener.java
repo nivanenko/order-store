@@ -12,30 +12,30 @@ import java.nio.charset.Charset;
 
 public class MultipartReadListener implements ReadListener {
     enum State { // FSM
-        BODY_START, BODY_PROCESS, BODY_END
+        CONTENT_START, CONTENT_PROCESS, CONTENT_END
     }
 
-    public static final int BUFFER_SIZE = 1024 * 1024;
+    private static final int BUFFER_SIZE = 1024 * 1024;
 
     /**
      * The (/, >) character in bytes
      */
-    public static final byte[] TAG_CLOSE = {0x2F, 0x3E};
+    private static final byte[] TAG_CLOSE = {0x2F, 0x3E};
 
     /**
      * The (<, ?) characters in bytes
      */
-    public static final byte[] XML_BEGIN = {0x3C, 0x3F};
+    private static final byte[] XML_BEGIN = {0x3C, 0x3F};
 
     /**
      * The (\r) character in bytes
      */
-    public static final byte CR = 0x0D;
+    private static final byte CR = 0x0D;
 
     /**
      * The (\n) character in bytes
      */
-    public static final byte LF = 0x0A;
+    private static final byte LF = 0x0A;
 
     private final ServletInputStream input;
     private final OrderService orderService;
@@ -48,9 +48,8 @@ public class MultipartReadListener implements ReadListener {
     private byte[] body;
     private byte[] incomplete;
 
-
-    public MultipartReadListener(ServletInputStream input,
-                                 OrderService service, DeferredResult<String> deferredResult, String boundary) {
+    public MultipartReadListener(ServletInputStream input, OrderService service,
+                                 DeferredResult<String> deferredResult, String boundary) {
         this.input = input;
         this.boundary = boundary.getBytes(Charset.forName("UTF-8"));
         this.orderService = service;
@@ -60,7 +59,7 @@ public class MultipartReadListener implements ReadListener {
         incomplete = new byte[1024];
         order = new Order();
         parser = new XMLParser(order);
-        currentState = State.BODY_START;
+        currentState = State.CONTENT_START;
     }
 
     private void setState(State nextState) {
@@ -73,7 +72,7 @@ public class MultipartReadListener implements ReadListener {
         try {
             do {
                 switch (currentState) {
-                    case BODY_START:
+                    case CONTENT_START:
                         input.read(buffer);
                         for (int i = 0; i < buffer.length; i++) {
                             // Search for the initial boundary
@@ -91,30 +90,30 @@ public class MultipartReadListener implements ReadListener {
                                                 body[k] = 0;
                                                 body = Util.trimBytes(body);
                                                 parser.parseBytes(body);
-                                                setState(State.BODY_END);
+                                                setState(State.CONTENT_END);
                                                 break;
                                             } else if (k == buffer.length - 1) { // if there's no final boundary
-                                                setState(State.BODY_PROCESS);
+                                                setState(State.CONTENT_PROCESS);
                                                 break;
                                             }
                                         }
-                                    } else if ((j == buffer.length - 1) && currentState == State.BODY_PROCESS) {
+                                    } else if ((j == buffer.length - 1) && currentState == State.CONTENT_PROCESS) {
                                         throw new IOException("The file is empty!");
-                                    } else if (currentState != State.BODY_START) {
+                                    } else if (currentState != State.CONTENT_START) {
                                         break;
                                     }
                                 }
-                            } else if (i == buffer.length - 1 || currentState != State.BODY_START) { // if there's no initial boundary
+                            } else if (i == buffer.length - 1 || currentState != State.CONTENT_START) { // if there's no initial boundary
                                 break;                                                        // or we've finished with the first part
                             }
                         }
 
                         /* Whether the XML body doesn't end with the closing tag ">",
                            we cut out the incomplete part into a byte array and then
-                           place it into the beginning of the next byte chunk in BODY_PROCESS state.*/
+                           place it into the beginning of the next byte chunk in CONTENT_PROCESS state. */
 
-                        if (currentState == State.BODY_PROCESS && !Util.equalElements(body)) {
-                            deletePartAfter();
+                        if (currentState == State.CONTENT_PROCESS && !Util.equalElements(body)) {
+                            cutChunkAfterBody();
                             body = Util.trimBytes(body);
                             parser.parseBytes(body);
                             break;
@@ -122,7 +121,7 @@ public class MultipartReadListener implements ReadListener {
                             throw new IOException("The file is empty!");
                         }
                         break;
-                    case BODY_PROCESS:
+                    case CONTENT_PROCESS:
                         input.read(buffer);
                         body = new byte[buffer.length];
                         for (int i = 0; i < buffer.length; i++) {
@@ -132,19 +131,17 @@ public class MultipartReadListener implements ReadListener {
                                     buffer[i + 1] == boundary[1] &&
                                     buffer[i + boundary.length - 1] == boundary[boundary.length - 1]) {
                                 body[i] = 0;
-                                addPartBefore();
+                                insertChunkBeforeBody();
                                 parser.parseBytes(body);
-                                setState(State.BODY_END);
+                                setState(State.CONTENT_END);
                                 break;
-                            } else if (i == buffer.length - 1 && currentState == State.BODY_PROCESS) {
-                                addPartBefore();
-                                deletePartAfter();
+                            } else if (i == buffer.length - 1 && currentState == State.CONTENT_PROCESS) {
+                                insertChunkBeforeBody();
+                                cutChunkAfterBody();
                                 parser.parseBytes(body);
                                 break;
                             }
                         }
-                        break;
-                    case BODY_END:
                         break;
                     default:
                         break;
@@ -170,11 +167,11 @@ public class MultipartReadListener implements ReadListener {
     }
 
     /**
-     * Deletes the incomplete part of the XML body and save it
+     * Cuts the incomplete part of the XML body and save it
      * into <code>byte[] incomplete</code>. Then the <code>body</code>
      * array attached with closing tags to make body completed for the XML parser.
      */
-    private void deletePartAfter() {
+    private void cutChunkAfterBody() {
         if (body[body.length - 1] != TAG_CLOSE[1] &&
                 body[body.length - 1] != CR &&
                 body[body.length - 1] != LF) {
@@ -203,14 +200,14 @@ public class MultipartReadListener implements ReadListener {
     }
 
     /**
-     * Add necessary tags to the <codebyte[] >body</code><br>
-     * True - initial tags.<br>
+     * Add necessary tags to the <code>byte[] body</code><br>
+     * True - opening tags.<br>
      * False - closing tags.<br>
      *
-     * @param initial true for initial tags, false - closing
+     * @param start true for opening tags, false - closing
      */
-    private void addTagsToBody(boolean initial) {
-        if (initial) {
+    private void addTagsToBody(boolean start) {
+        if (start) {
             byte[] tags = "<order><lines>".getBytes(Charset.forName("UTF-8"));
             byte[] newBody = new byte[body.length + tags.length];
             System.arraycopy(tags, 0, newBody, 0, tags.length);
@@ -231,16 +228,16 @@ public class MultipartReadListener implements ReadListener {
      * Adding <code>incomplete</code> before <code>body</code>
      * and adding initial tags as well.
      */
-    private void addPartBefore() {
+    private void insertChunkBeforeBody() {
         body = Util.trimBytes(body);
-        // Copy the incomplete part into the beginning of the current body
+        // Copy the incomplete chunk into the beginning of the current body
         byte[] tempBody = new byte[incomplete.length + body.length];
         System.arraycopy(incomplete, 0, tempBody, 0, incomplete.length);
         System.arraycopy(body, 0, tempBody, incomplete.length, body.length);
         body = new byte[tempBody.length];
         System.arraycopy(tempBody, 0, body, 0, tempBody.length);
 
-        addTagsToBody(true); // attach initial tags
+        addTagsToBody(true);
         body = Util.trimBytes(body);
     }
 }

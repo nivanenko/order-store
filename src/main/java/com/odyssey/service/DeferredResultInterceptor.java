@@ -24,6 +24,7 @@ public class DeferredResultInterceptor extends DeferredResultProcessingIntercept
         _request = request;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <T> void preProcess(NativeWebRequest request, DeferredResult<T> deferredResult) throws Exception {
         ServletInputStream input = _request.getInputStream();
