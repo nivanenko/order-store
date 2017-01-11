@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<order>
+    <from zip="0003057" currentState="AZA" city="Kiev"/>
+    <to zip="20001" currentState="RRR" city="New York"/>
+    <lines>
+        <line weight="530.20" volume="15" hazard="false" product="case"/>
+        <line weight="2023.43" volume="35000" hazard="false" product="box"/>
+		<line weight="11545.4" volume="9584" hazard="false" product="toy"/>
+    </lines>
+    <instructions>here be dragons</instructions>
+</order>

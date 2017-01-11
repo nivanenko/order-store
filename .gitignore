@@ -1,7 +1,5 @@
 *.iml
-*.properties
 /out/
 .idea/
 log/
 target/
-test.*

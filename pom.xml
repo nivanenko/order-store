@@ -9,8 +9,7 @@
 
     <properties>
         <java-version>1.8</java-version>
-        <spring.version>4.3.4.RELEASE</spring.version>
-        <spring-security.version>4.2.0.RELEASE</spring-security.version>
+        <spring.version>4.3.5.RELEASE</spring.version>
         <json.version>20160810</json.version>
         <fasterxml.version>1.0.0</fasterxml.version>
         <hikaricp.version>2.5.1</hikaricp.version>
@@ -57,16 +56,6 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
             <version>${spring.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-web</artifactId>
-            <version>${spring-security.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-config</artifactId>
-            <version>${spring-security.version}</version>
         </dependency>
 
         <!-- JSON -->

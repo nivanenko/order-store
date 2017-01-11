@@ -1,6 +1,5 @@
 import com.odyssey.controller.FileProcessController;
 import com.odyssey.controller.LookupController;
-import com.odyssey.service.DeferredResultInterceptor;
 import com.odyssey.service.OrderService;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,7 +41,6 @@ public class UnitTest {
 
         uploadController = mock(FileProcessController.class);
         lookupController = mock(LookupController.class);
-        DeferredResultInterceptor df = mock(DeferredResultInterceptor.class);
 
         mockMvc = MockMvcBuilders.webAppContextSetup(wac).build();
     }
@@ -50,7 +48,7 @@ public class UnitTest {
     @Test
     public void testUpload() throws Exception {
         MockMultipartFile fmp = new MockMultipartFile("test",
-                Files.readAllBytes(Paths.get("C:\\Users\\Nazar\\IdeaProjects\\order-store\\test.xml")));
+                Files.readAllBytes(Paths.get(getClass().getResource("test.xml").toURI())));
 
         MvcResult mvcResult = mockMvc.perform(fileUpload("/upload")
                 .file(fmp))
