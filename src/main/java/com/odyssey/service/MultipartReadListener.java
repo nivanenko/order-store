@@ -18,7 +18,7 @@ public class MultipartReadListener implements ReadListener {
     private static final int BUFFER_SIZE = 1024 * 1024;
 
     /**
-     * The (/, >) character in bytes
+     * The (/, >) characters in bytes
      */
     private static final byte[] TAG_CLOSE = {0x2F, 0x3E};
 
@@ -28,14 +28,10 @@ public class MultipartReadListener implements ReadListener {
     private static final byte[] XML_BEGIN = {0x3C, 0x3F};
 
     /**
-     * The (\r) character in bytes
+     * Booleans for the method addTagsToBody
      */
-    private static final byte CR = 0x0D;
-
-    /**
-     * The (\n) character in bytes
-     */
-    private static final byte LF = 0x0A;
+    private static final boolean BEFORE = true;
+    private static final boolean AFTER = false;
 
     private final ServletInputStream input;
     private final OrderService orderService;
@@ -138,7 +134,6 @@ public class MultipartReadListener implements ReadListener {
                             } else if (i == buffer.length - 1 && currentState == State.CONTENT_PROCESS) {
                                 insertChunkBeforeBody();
                                 cutChunkAfterBody();
-                                parser.parseBytes(body);
                                 break;
                             }
                         }
@@ -172,15 +167,13 @@ public class MultipartReadListener implements ReadListener {
      * array attached with closing tags to make body completed for the XML parser.
      */
     private void cutChunkAfterBody() {
-        if (body[body.length - 1] != TAG_CLOSE[1] &&
-                body[body.length - 1] != CR &&
-                body[body.length - 1] != LF) {
-            incomplete = new byte[body.length];
+        if (body[body.length - 1] != TAG_CLOSE[1]) {
             body = Util.trimBytes(body);
+            incomplete = new byte[body.length];
 
             for (int i = body.length - 1; i >= 0; i--) {
                 if (body[i - 1] == TAG_CLOSE[0] && body[i] == TAG_CLOSE[1]) {
-                    // Copy the incomplete part from the body into incomplete
+                    // Copy the incomplete part from the body into the particular array
                     System.arraycopy(body, ++i, incomplete, 0, body.length - i);
                     incomplete = Util.trimBytes(incomplete);
 
@@ -192,11 +185,31 @@ public class MultipartReadListener implements ReadListener {
                     body = new byte[completePart.length];
                     System.arraycopy(completePart, 0, body, 0, completePart.length);
 
-                    addTagsToBody(false);
+                    addTagsToBody(AFTER);
                     break;
                 }
             }
+        } else if (body[body.length - 1] == TAG_CLOSE[1] &&
+                body[body.length - 2] == TAG_CLOSE[0]) {
+                addTagsToBody(AFTER);
         }
+    }
+
+    /**
+     * Adding <code>incomplete</code> before <code>body</code>
+     * and adding initial tags as well.
+     */
+    private void insertChunkBeforeBody() {
+        body = Util.trimBytes(body);
+        // Copy the incomplete chunk into the beginning of the current body
+        byte[] tempBody = new byte[incomplete.length + body.length];
+        System.arraycopy(incomplete, 0, tempBody, 0, incomplete.length);
+        System.arraycopy(body, 0, tempBody, incomplete.length, body.length);
+        body = new byte[tempBody.length];
+        System.arraycopy(tempBody, 0, body, 0, tempBody.length);
+
+        addTagsToBody(BEFORE);
+        body = Util.trimBytes(body);
     }
 
     /**
@@ -222,22 +235,5 @@ public class MultipartReadListener implements ReadListener {
             body = new byte[newBody.length];
             System.arraycopy(newBody, 0, body, 0, newBody.length);
         }
-    }
-
-    /**
-     * Adding <code>incomplete</code> before <code>body</code>
-     * and adding initial tags as well.
-     */
-    private void insertChunkBeforeBody() {
-        body = Util.trimBytes(body);
-        // Copy the incomplete chunk into the beginning of the current body
-        byte[] tempBody = new byte[incomplete.length + body.length];
-        System.arraycopy(incomplete, 0, tempBody, 0, incomplete.length);
-        System.arraycopy(body, 0, tempBody, incomplete.length, body.length);
-        body = new byte[tempBody.length];
-        System.arraycopy(tempBody, 0, body, 0, tempBody.length);
-
-        addTagsToBody(true);
-        body = Util.trimBytes(body);
     }
 }

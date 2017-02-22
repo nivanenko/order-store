@@ -69,7 +69,7 @@ public class Util {
         // Before body
         int len = bytes.length;
         int i = 0;
-        while ((bytes[i] == 0) && i++ < len) ; //
+        while ((bytes[i] == 0) && i++ < len) ;
         byte[] temp = new byte[len - i];
         System.arraycopy(bytes, i, temp, 0, len - i);
 

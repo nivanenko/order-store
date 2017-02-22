@@ -41,7 +41,6 @@ public class UnitTest {
 
         uploadController = mock(FileProcessController.class);
         lookupController = mock(LookupController.class);
-
         mockMvc = MockMvcBuilders.webAppContextSetup(wac).build();
     }
 
